@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <math.h>
 
+#include "clock.h"
+
 void cpuwarm()
 {
 #pragma unroll
@@ -14,16 +16,16 @@ template <int Cnt>
 inline void add_test()
 {
 	cpuwarm();
-	unsigned int ui;
-	unsigned long long start = __rdtscp(&ui);
+	unsigned long long start = getclock();
 	const static int LoopCnt = 10000;
+	unsigned ui;
 	for (int i = 0; i < LoopCnt; i++)
 	{
 #pragma unroll
 		for (int j = 0; j < Cnt; j++)
 			asm volatile("add %0, %1" : "=r"(ui) : "r"(ui));
 	}
-	unsigned long long end = __rdtscp(&ui);
+	unsigned long long end = getclock();
 	unsigned long long clock = end - start;
 	printf("%f, %lld\n", (double)clock / (LoopCnt * Cnt), clock / LoopCnt);
 }
@@ -35,7 +37,7 @@ inline void fadd_test()
 	float c = (rand() % 100) / 100.f;
 	cpuwarm();
 	unsigned int ui;
-	unsigned long long start = __rdtscp(&ui);
+	unsigned long long start = getclock();
 	const static int LoopCnt = 10000;
 	for (int i = 0; i < LoopCnt; i++)
 	{
@@ -43,7 +45,7 @@ inline void fadd_test()
 		for (int j = 0; j < Cnt; j++)
 			c += a;
 	}
-	unsigned long long end = __rdtscp(&ui);
+	unsigned long long end = getclock();
 	unsigned long long clock = end - start;
 	printf("%f, %lld, %f\n", (double)clock / (LoopCnt * Cnt), clock / LoopCnt, c);
 }
@@ -56,7 +58,7 @@ inline void fma_test()
 	float c = (rand() % 100) / 100.f;
 	cpuwarm();
 	unsigned int ui;
-	unsigned long long start = __rdtscp(&ui);
+	unsigned long long start = getclock();
 	const static int LoopCnt = 10000;
 	for (int i = 0; i < LoopCnt; i++)
 	{
@@ -64,7 +66,7 @@ inline void fma_test()
 		for (int j = 0; j < Cnt; j++)
 			c += a * b;
 	}
-	unsigned long long end = __rdtscp(&ui);
+	unsigned long long end = getclock();
 	unsigned long long clock = end - start;
 	printf("%f, %lld, %f\n", (double)clock / (LoopCnt * Cnt), clock / LoopCnt, c);
 }
@@ -74,7 +76,7 @@ inline void sqrtsd_test()
 {
 	cpuwarm();
 	unsigned int ui;
-	unsigned long long start = __rdtscp(&ui);
+	unsigned long long start = getclock();
 	const static int LoopCnt = 10000;
 	for (int i = 0; i < LoopCnt; i++)
 	{
@@ -82,7 +84,7 @@ inline void sqrtsd_test()
 		for (int j = 0; j < Cnt; j++)
 			asm volatile("sqrtsd %xmm0, %xmm0");
 	}
-	unsigned long long end = __rdtscp(&ui);
+	unsigned long long end = getclock();
 	unsigned long long clock = end - start;
 	printf("%f, %lld\n", (double)clock / (LoopCnt * Cnt), clock / LoopCnt);
 }
