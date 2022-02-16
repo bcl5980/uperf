@@ -1,0 +1,10 @@
+cmake_minimum_required(VERSION 3.4.1)
+project(uperf)
+
+set(CMAKE_CXX_STANDARD 11)
+aux_source_directory(./ SRCS)
+foreach(SRC ${SRCS})
+    STRING(REGEX REPLACE ".+/(.+)\\..*" "\\1" EXEC ${SRC})
+    message(STATUS "Find exec: ${SRC}")
+    add_executable(${EXEC} ${SRC})
+endforeach()
