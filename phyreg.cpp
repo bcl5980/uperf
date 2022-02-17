@@ -22,21 +22,45 @@ void phyreg_test(unsigned char *instBuf, int addCnt, int nopCnt)
     int i = 0;
     const static int GenCodeCnt = 500;
 #ifdef __aarch64__
-    // @todo:
+    // generate add x0, x5, x5
+    unsigned int *inst = (unsigned int *)instBuf;
+    for (int k = 0; k < GenCodeCnt; k++)
+    {
+        for (int j = 0; j < sqrtCnt; j++)
+        {
+            inst[i++] = 0xa000058b;
+        }
+
+        // generate nop
+        for (int j = 0; j < nopCnt; j++)
+        {
+            inst[i++] = 0xd503201f;
+        }
+    }
+
+    // ret 0xd65f03c0
+    inst[i++] = 0xd65f03c0;
 #else
     for (int k = 0; k < GenCodeCnt; k++)
     {
-        // generate: add rax, rbx     --> 0x48, 0x01, 0xd8
-        // generate: addss xmm0, xmm1 --> 0xf3, 0x0f, 0x58, 0xc1
+        // generate: add rax, rbx            --> 0x48, 0x01, 0xd8
+        // generate: addss xmm0, xmm1        --> 0xf3, 0x0f, 0x58, 0xc1
+        // generate: vaddps ymm0, ymm1, ymm1 --> 0xc5, 0xf4, 0x58, 0xc1 
         for (int j = 0; j < addCnt; j++)
         {
+            instBuf[i++] = 0x48;
+            instBuf[i++] = 0x01;
+            instBuf[i++] = 0xd8;
+
             // instBuf[i++] = 0xf3;
             // instBuf[i++] = 0x0f;
             // instBuf[i++] = 0x58;
             // instBuf[i++] = 0xc1;
-            instBuf[i++] = 0x48;
-            instBuf[i++] = 0x01;
-            instBuf[i++] = 0xd8;
+
+            // instBuf[i++] = 0xc5;
+            // instBuf[i++] = 0xf4;
+            // instBuf[i++] = 0x58;
+            // instBuf[i++] = 0xc1;
         }
 
         // generate nop
