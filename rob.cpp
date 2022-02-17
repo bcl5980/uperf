@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
 
     for (int nopCnt = nopBase; nopCnt < nopEnd; nopCnt += nopStep)
     {
-        printf("%d, ", nopCnt + sqrtCnt);
+        printf("%d, ", nopCnt);
         rob_test(instBuf, nopCnt, sqrtCnt);
         printf("\n");
     }
