@@ -86,8 +86,31 @@ void rob_test(unsigned char *instBuf, int nopCnt, int sqrtCnt)
     printf("%lld, ", min / (LoopCnt * GenCodeCnt));
 }
 
-int main(int argc, char **argv)
+int main(int argc, char *argv[])
 {
+    int nopBase = 100;
+    int nopEnd = 1000;
+    int nopStep = 10;
+    int sqrtCnt = 10;
+
+    for (int i = 1; i < argc; i += 2)
+    {
+        if (strcmp(argv[i], "-start") == 0)
+            nopBase = atoi(argv[i + 1]);
+        else if (strcmp(argv[i], "-end") == 0)
+            nopEnd = atoi(argv[i + 1]);
+        else if (strcmp(argv[i], "-step") == 0)
+            nopStep = atoi(argv[i + 1]);
+        else if (strcmp(argv[i], "-sqrt") == 0)
+            sqrtCnt = atoi(argv[i + 1]);
+        else
+        {
+            printf("rob -start 100 -end 1000 -step 10 -sqrt 8\n");
+            return 0;
+        }
+    }
+
+    printf("nopStart:%d, nopEnd:%d, nopStep:%d, sqrtCnt:%d\n", nopBase, nopEnd, nopStep, sqrtCnt);
     SetProcessAffinityMask(GetCurrentProcess(), 0x1);
     SetProcessPriorityBoost(GetCurrentProcess(), true);
     SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
@@ -96,14 +119,10 @@ int main(int argc, char **argv)
     unsigned char *instBuf = (unsigned char *)((size_t)(code + 0xfff) & (~0xfff));
     fillnop(instBuf, 0x100000);
 
-    for (int nopCnt = 490; nopCnt < 520; nopCnt++)
+    for (int nopCnt = nopBase; nopCnt < nopEnd; nopCnt += nopStep)
     {
-        int sqrtCnt = 3;
         printf("%d, ", nopCnt + sqrtCnt);
-        for (; sqrtCnt < 15; sqrtCnt += 2)
-        {
-            rob_test(instBuf, nopCnt, sqrtCnt);
-        }
+        rob_test(instBuf, nopCnt, sqrtCnt);
         printf("\n");
     }
     VirtualFree(code, 0x1001000, MEM_RELEASE);
