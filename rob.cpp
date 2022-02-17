@@ -61,15 +61,22 @@ void rob_test(unsigned char *instBuf, int nopCnt, int sqrtCnt)
     // warm icache
     ((void (*)())instBuf)();
 
-    unsigned long long start = getclock();
-    const static int LoopCnt = 10000;
-    for (int i = 0; i < LoopCnt; i++)
+    unsigned long long min = -1ull;
+    const static int LoopCnt = 200000;
+    for (int k = 0; k < 10; k++)
     {
-        ((void (*)())instBuf)();
+        unsigned long long start = getclock();
+        for (int i = 0; i < LoopCnt; i++)
+        {
+            ((void (*)())instBuf)();
+        }
+        unsigned long long end = getclock();
+        unsigned long long clock = end - start;
+        if (min > clock)
+            min = clock;
     }
-    unsigned long long end = getclock();
-    unsigned long long clock = end - start;
-    printf("%lld, ", clock / LoopCnt);
+
+    printf("%lld, ", min / LoopCnt);
 }
 
 int main(int argc, char **argv)
@@ -82,10 +89,10 @@ int main(int argc, char **argv)
     unsigned char *instBuf = (unsigned char *)((size_t)(code + 0xfff) & (~0xfff));
     fillnop(instBuf, 0x100000);
 
-    for (int nopCnt = 100; nopCnt < 1000; nopCnt += 10)
+    for (int nopCnt = 100; nopCnt < 800; nopCnt += 5)
     {
         printf("%d, ", nopCnt);
-        for (int sqrtCnt = 3; sqrtCnt < 15; sqrtCnt++)
+        for (int sqrtCnt = 3; sqrtCnt < 15; sqrtCnt += 2)
         {
             rob_test(instBuf, nopCnt, sqrtCnt);
         }
