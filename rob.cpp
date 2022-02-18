@@ -43,6 +43,9 @@ void rob_test(unsigned char *instBuf, int nopCnt, int sqrtCnt)
 
     // ret 0xd65f03c0
     inst[i++] = 0xd65f03c0;
+
+    __dmb(_ARM64_BARRIER_SY); // data memory barrier
+    __isb(_ARM64_BARRIER_SY); // instruction barrier
 #else
     for (int k = 0; k < GenCodeCnt; k++)
     {
@@ -65,20 +68,22 @@ void rob_test(unsigned char *instBuf, int nopCnt, int sqrtCnt)
     instBuf[i++] = 0xc3;
 #endif
 
+    size_t r0 = 0;
+    size_t r1 = 0;
     // warm icache
-    ((void (*)())instBuf)();
+    ((size_t(*)(size_t, size_t))instBuf)(r0, r1);
 
-    unsigned long long min = -1ull;
+    size_t min = -1ull;
     const static int LoopCnt = 500;
     for (int k = 0; k < 10; k++)
     {
-        unsigned long long start = getclock();
+        size_t start = getclock();
         for (int i = 0; i < LoopCnt; i++)
         {
-            ((void (*)())instBuf)();
+            ((size_t(*)(size_t, size_t))instBuf)(r0, r1);
         }
-        unsigned long long end = getclock();
-        unsigned long long clock = end - start;
+        size_t end = getclock();
+        size_t clock = end - start;
         if (min > clock)
             min = clock;
     }
@@ -111,13 +116,13 @@ int main(int argc, char *argv[])
     }
 
     printf("nopStart:%d, nopEnd:%d, nopStep:%d, sqrtCnt:%d\n", nopBase, nopEnd, nopStep, sqrtCnt);
-    SetProcessAffinityMask(GetCurrentProcess(), 0x1);
+    SetProcessAffinityMask(GetCurrentProcess(), 0x10);
     SetProcessPriorityBoost(GetCurrentProcess(), true);
     SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
     SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
     unsigned char *code = (unsigned char *)VirtualAlloc(0, 0x1001000, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
     unsigned char *instBuf = (unsigned char *)((size_t)(code + 0xfff) & (~0xfff));
-    fillnop(instBuf, 0x100000);
+    fillnop(instBuf, 0x1000000);
 
     for (int nopCnt = nopBase; nopCnt < nopEnd; nopCnt += nopStep)
     {

@@ -26,9 +26,9 @@ void phyreg_test(unsigned char *instBuf, int addCnt, int nopCnt)
     unsigned int *inst = (unsigned int *)instBuf;
     for (int k = 0; k < GenCodeCnt; k++)
     {
-        for (int j = 0; j < sqrtCnt; j++)
+        for (int j = 0; j < addCnt; j++)
         {
-            inst[i++] = 0xa000058b;
+            inst[i++] = 0x8b0500a0;
         }
 
         // generate nop
@@ -40,12 +40,15 @@ void phyreg_test(unsigned char *instBuf, int addCnt, int nopCnt)
 
     // ret 0xd65f03c0
     inst[i++] = 0xd65f03c0;
+
+    __dmb(_ARM64_BARRIER_SY); // data memory barrier
+    __isb(_ARM64_BARRIER_SY); // instruction barrier
 #else
     for (int k = 0; k < GenCodeCnt; k++)
     {
         // generate: add rax, rbx            --> 0x48, 0x01, 0xd8
         // generate: addss xmm0, xmm1        --> 0xf3, 0x0f, 0x58, 0xc1
-        // generate: vaddps ymm0, ymm1, ymm1 --> 0xc5, 0xf4, 0x58, 0xc1 
+        // generate: vaddps ymm0, ymm1, ymm1 --> 0xc5, 0xf4, 0x58, 0xc1
         for (int j = 0; j < addCnt; j++)
         {
             instBuf[i++] = 0x48;
@@ -119,13 +122,13 @@ int main(int argc, char *argv[])
     }
 
     printf("nopStart:%d, addEnd:%d, addStep:%d, nopCnt:%d\n", addBase, addEnd, addStep, nopCnt);
-    SetProcessAffinityMask(GetCurrentProcess(), 0x1);
+    SetProcessAffinityMask(GetCurrentProcess(), 0x10);
     SetProcessPriorityBoost(GetCurrentProcess(), true);
     SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
     SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
     unsigned char *code = (unsigned char *)VirtualAlloc(0, 0x1001000, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
     unsigned char *instBuf = (unsigned char *)((size_t)(code + 0xfff) & (~0xfff));
-    fillnop(instBuf, 0x100000);
+    fillnop(instBuf, 0x1000000);
 
     for (int addCnt = addBase; addCnt < addEnd; addCnt += addStep)
     {
