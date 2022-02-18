@@ -17,7 +17,7 @@ void fillnop(unsigned char *instBuf, unsigned sizeBytes)
 #endif
 }
 
-void phyreg_test(unsigned char *instBuf, int addCnt, int nopCnt)
+void phyreg_test(unsigned char *instBuf, int addCnt, int sqrtCnt)
 {
     int i = 0;
     const static int GenCodeCnt = 64;
@@ -26,15 +26,14 @@ void phyreg_test(unsigned char *instBuf, int addCnt, int nopCnt)
     unsigned int *inst = (unsigned int *)instBuf;
     for (int k = 0; k < GenCodeCnt; k++)
     {
+        for (int j = 0; j < sqrtCnt; j++)
+        {
+            inst[i++] = 0x1e61c000;
+        }
+
         for (int j = 0; j < addCnt; j++)
         {
             inst[i++] = 0x8b010020;
-        }
-
-        // generate nop
-        for (int j = 0; j < nopCnt; j++)
-        {
-            inst[i++] = 0xd503201f;
         }
     }
 
@@ -46,6 +45,15 @@ void phyreg_test(unsigned char *instBuf, int addCnt, int nopCnt)
 #else
     for (int k = 0; k < GenCodeCnt; k++)
     {
+        // generate sqrtsd %xmm0, %xmm0
+        for (int j = 0; j < sqrtCnt; j++)
+        {
+            instBuf[i++] = 0xf2;
+            instBuf[i++] = 0x0f;
+            instBuf[i++] = 0x51;
+            instBuf[i++] = 0xc0;
+        }
+
         // generate: add rax, rbx            --> 0x48, 0x01, 0xd8
         // generate: addss xmm0, xmm1        --> 0xf3, 0x0f, 0x58, 0xc1
         // generate: vaddps ymm0, ymm1, ymm1 --> 0xc5, 0xf4, 0x58, 0xc1
@@ -64,12 +72,6 @@ void phyreg_test(unsigned char *instBuf, int addCnt, int nopCnt)
             // instBuf[i++] = 0xf4;
             // instBuf[i++] = 0x58;
             // instBuf[i++] = 0xc1;
-        }
-
-        // generate nop
-        for (int j = 0; j < nopCnt; j++)
-        {
-            instBuf[i++] = 0x90;
         }
     }
     // generate ret
@@ -104,7 +106,7 @@ int main(int argc, char *argv[])
     int addBase = 100;
     int addEnd = 200;
     int addStep = 4;
-    int nopCnt = 800;
+    int sqrtCnt = 8;
 
     for (int i = 1; i < argc; i += 2)
     {
@@ -114,16 +116,16 @@ int main(int argc, char *argv[])
             addEnd = atoi(argv[i + 1]);
         else if (strcmp(argv[i], "-step") == 0)
             addStep = atoi(argv[i + 1]);
-        else if (strcmp(argv[i], "-nop") == 0)
-            nopCnt = atoi(argv[i + 1]);
+        else if (strcmp(argv[i], "-sqrt") == 0)
+            sqrtCnt = atoi(argv[i + 1]);
         else
         {
-            printf("phyreg -start 100 -end 200 -step 4 -nop 800\n");
+            printf("phyreg -start 100 -end 200 -step 4 -sqrt 8\n");
             return 0;
         }
     }
 
-    printf("nopStart:%d, addEnd:%d, addStep:%d, nopCnt:%d\n", addBase, addEnd, addStep, nopCnt);
+    printf("nopStart:%d, addEnd:%d, addStep:%d, sqrtCnt:%d\n", addBase, addEnd, addStep, sqrtCnt);
     SetProcessAffinityMask(GetCurrentProcess(), 0x10);
     SetProcessPriorityBoost(GetCurrentProcess(), true);
     SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
@@ -135,7 +137,7 @@ int main(int argc, char *argv[])
     for (int addCnt = addBase; addCnt < addEnd; addCnt += addStep)
     {
         printf("%d, ", addCnt);
-        phyreg_test(instBuf, addCnt, nopCnt);
+        phyreg_test(instBuf, addCnt, sqrtCnt);
         printf("\n");
     }
     VirtualFree(code, 0x1001000, MEM_RELEASE);
