@@ -22,13 +22,13 @@ void phyreg_test(unsigned char *instBuf, int addCnt, int nopCnt)
     int i = 0;
     const static int GenCodeCnt = 64;
 #ifdef __aarch64__
-    // generate add x0, x5, x5
+    // generate add x0, x1, x1
     unsigned int *inst = (unsigned int *)instBuf;
     for (int k = 0; k < GenCodeCnt; k++)
     {
         for (int j = 0; j < addCnt; j++)
         {
-            inst[i++] = 0x8b0500a0;
+            inst[i++] = 0x8b010020;
         }
 
         // generate nop
@@ -77,7 +77,9 @@ void phyreg_test(unsigned char *instBuf, int addCnt, int nopCnt)
 #endif
 
     // warm icache
-    ((void (*)())instBuf)();
+    size_t r0 = 0;
+    size_t r1 = 0;
+    ((size_t(*)(size_t, size_t))instBuf)(r0, r1);
 
     unsigned long long min = -1ull;
     const static int LoopCnt = 500;
@@ -86,7 +88,7 @@ void phyreg_test(unsigned char *instBuf, int addCnt, int nopCnt)
         unsigned long long start = getclock();
         for (int i = 0; i < LoopCnt; i++)
         {
-            ((void (*)())instBuf)();
+            ((size_t(*)(size_t, size_t))instBuf)(r0, r1);
         }
         unsigned long long end = getclock();
         unsigned long long clock = end - start;
