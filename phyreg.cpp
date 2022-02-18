@@ -20,7 +20,7 @@ void fillnop(unsigned char *instBuf, unsigned sizeBytes)
 void phyreg_test(unsigned char *instBuf, int addCnt, int nopCnt)
 {
     int i = 0;
-    const static int GenCodeCnt = 500;
+    const static int GenCodeCnt = 64;
 #ifdef __aarch64__
     // generate add x0, x5, x5
     unsigned int *inst = (unsigned int *)instBuf;

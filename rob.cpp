@@ -20,7 +20,7 @@ void fillnop(unsigned char *instBuf, unsigned sizeBytes)
 void rob_test(unsigned char *instBuf, int nopCnt, int sqrtCnt)
 {
     int i = 0;
-    const static int GenCodeCnt = 500;
+    const static int GenCodeCnt = 64;
 #ifdef __aarch64__
     // double d = (double)rand();
     // d = sqrt(d);
