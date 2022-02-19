@@ -13,9 +13,10 @@
 // https://armconverter.com/
 // https://defuse.ca/online-x86-assembler.htm
 
-enum DelayCase { DelayNop, DelayIntAdd, DelayFAdd, DelayMax };
+enum DelayCase { DelayNop, DelayIntAdd, DelayFAdd, DelayCmp, DelayMax };
 
-const char *DelayCaseName[DelayMax] = {"Sqrt Delay + Nop", "Sqrt Delay + Int Add", "Sqrt Delay + Float Add"};
+const char *DelayCaseName[DelayMax] = {"Sqrt Delay + Nop", "Sqrt Delay + Int Add", "Sqrt Delay + Float Add",
+                                       "Sqrt Delay + Cmp"};
 
 void fillnop(unsigned char *instBuf, unsigned sizeBytes) {
 #ifdef __aarch64__
@@ -56,6 +57,10 @@ void delay_test(DelayCase caseId, unsigned char *instBuf, int testCnt, int delay
             // fadd s1, s2, s2
             case DelayFAdd:
                 inst[i++] = 0x1e222841;
+                break;
+            // cmp x0, x1
+            case DelayCmp:
+                inst[i++] = 0xeb01001f;
                 break;
             }
         }
@@ -98,6 +103,12 @@ void delay_test(DelayCase caseId, unsigned char *instBuf, int testCnt, int delay
                 instBuf[i++] = 0x0f;
                 instBuf[i++] = 0x58;
                 instBuf[i++] = 0xd3;
+                break;
+            // cmp rax, rcx
+            case DelayCmp:
+                instBuf[i++] = 0x48;
+                instBuf[i++] = 0x39;
+                instBuf[i++] = 0xC8;
                 break;
             }
         }
@@ -163,7 +174,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (caseId < 0 || caseId >= DelayMax) {
-        printf("0 nop\n1 int add\n 2 float add");
+        printf("0 nop\n1 int add\n2 float add\n3 cmp\n");
     }
 
     printf("case: %s\ndelayCnt:%d codeDupCnt:%d, codeLoopCnt:%d\n", DelayCaseName[caseId], delayCnt, codeDupCnt,
