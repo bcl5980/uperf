@@ -5,17 +5,17 @@
 
 #include "clock.h"
 
+// Oline compiler
+// https://godbolt.org/
+
 // Online asm generate
 // https://disasm.pro/
 // https://armconverter.com/
 // https://defuse.ca/online-x86-assembler.htm
 
-enum DelayCase { DelayNop, DelayIntAdd, DelayMax };
+enum DelayCase { DelayNop, DelayIntAdd, DelayFAdd, DelayMax };
 
-const char *DelayCaseName[DelayMax] = {
-    "Sqrt Delay + Nop",
-    "Sqrt Delay + Int Add",
-};
+const char *DelayCaseName[DelayMax] = {"Sqrt Delay + Nop", "Sqrt Delay + Int Add", "Sqrt Delay + Float Add"};
 
 void fillnop(unsigned char *instBuf, unsigned sizeBytes) {
 #ifdef __aarch64__
@@ -38,20 +38,24 @@ void delay_test(DelayCase caseId, unsigned char *instBuf, int testCnt, int delay
     // https://docs.microsoft.com/en-us/cpp/build/arm64-windows-abi-conventions?view=msvc-170
     unsigned int *inst = (unsigned int *)instBuf;
     for (int k = 0; k < codeDupCnt; k++) {
-        // generate sqrt d0, d0
+        // sqrt d0, d0
         for (int j = 0; j < delayCnt; j++) {
             inst[i++] = 0x1e61c000;
         }
 
         for (int j = 0; j < testCnt; j++) {
             switch (caseId) {
-            // generate nop
+            // nop
             case DelayNop:
                 inst[i++] = 0xd503201f;
                 break;
-            // generate add x0, x1, x1
+            // add x0, x1, x1
             case DelayIntAdd:
                 inst[i++] = 0x8b010020;
+                break;
+            // fadd s1, s2, s2
+            case DelayFAdd:
+                inst[i++] = 0x1e222841;
                 break;
             }
         }
@@ -68,7 +72,7 @@ void delay_test(DelayCase caseId, unsigned char *instBuf, int testCnt, int delay
     // RBX, RBP, RDI, RSI, RSP, R12, R13, R14, R15, and XMM6-XMM15 nonvolatile, we can't use them
     // https://docs.microsoft.com/en-us/cpp/build/x64-calling-convention?view=msvc-170
     for (int k = 0; k < codeDupCnt; k++) {
-        // generate sqrtsd %xmm0, %xmm0
+        // sqrtsd %xmm0, %xmm0
         for (int j = 0; j < delayCnt; j++) {
             instBuf[i++] = 0xf2;
             instBuf[i++] = 0x0f;
@@ -78,20 +82,27 @@ void delay_test(DelayCase caseId, unsigned char *instBuf, int testCnt, int delay
 
         for (int j = 0; j < testCnt; j++) {
             switch (caseId) {
-            // generate nop
+            // nop
             case DelayNop:
                 instBuf[i++] = 0x90;
                 break;
-            // generate add rax, rcx
+            // add rax, rcx
             case DelayIntAdd:
                 instBuf[i++] = 0x48;
                 instBuf[i++] = 0x01;
                 instBuf[i++] = 0xc8;
                 break;
+            // addss xmm2, xmm3
+            case DelayFAdd:
+                instBuf[i++] = 0xf3;
+                instBuf[i++] = 0x0f;
+                instBuf[i++] = 0x58;
+                instBuf[i++] = 0xd3;
+                break;
             }
         }
     }
-    // generate ret
+    // ret
     instBuf[i++] = 0xc3;
 #endif
 
@@ -152,7 +163,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (caseId < 0 || caseId >= DelayMax) {
-        printf("0 nop\n1 int add\n");
+        printf("0 nop\n1 int add\n 2 float add");
     }
 
     printf("case: %s\ndelayCnt:%d codeDupCnt:%d, codeLoopCnt:%d\n", DelayCaseName[caseId], delayCnt, codeDupCnt,
