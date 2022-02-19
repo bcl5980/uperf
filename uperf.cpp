@@ -13,10 +13,10 @@
 // https://armconverter.com/
 // https://defuse.ca/online-x86-assembler.htm
 
-enum DelayCase { DelayNop, DelayIntAdd, DelayFAdd, DelayCmp, DelayMax };
+enum DelayCase { DelayNop, DelayIAdd, DelayFAdd, DelayCmp, DelayIAddICmp, DelayMax };
 
-const char *DelayCaseName[DelayMax] = {"Sqrt Delay + Nop", "Sqrt Delay + Int Add", "Sqrt Delay + Float Add",
-                                       "Sqrt Delay + Cmp"};
+const char *DelayCaseName[DelayMax] = {"Sqrt Delay + Nop", "Sqrt Delay + IAdd", "Sqrt Delay + FAdd", "Sqrt Delay + Cmp",
+                                       "Sqrt Delay + Add&Cmp"};
 
 void fillnop(unsigned char *instBuf, unsigned sizeBytes) {
 #ifdef __aarch64__
@@ -51,7 +51,7 @@ void delay_test(DelayCase caseId, unsigned char *instBuf, int testCnt, int delay
                 inst[i++] = 0xd503201f;
                 break;
             // add x0, x1, x1
-            case DelayIntAdd:
+            case DelayIAdd:
                 inst[i++] = 0x8b010020;
                 break;
             // fadd s1, s2, s2
@@ -61,6 +61,12 @@ void delay_test(DelayCase caseId, unsigned char *instBuf, int testCnt, int delay
             // cmp x0, x1
             case DelayCmp:
                 inst[i++] = 0xeb01001f;
+                break;
+            // add x0, x1, x1
+            // cmp x2, x3
+            case DelayIAddICmp:
+                inst[i++] = 0x8b010020;
+                inst[i++] = 0xeb03005f;
                 break;
             }
         }
@@ -92,7 +98,7 @@ void delay_test(DelayCase caseId, unsigned char *instBuf, int testCnt, int delay
                 instBuf[i++] = 0x90;
                 break;
             // add rax, rcx
-            case DelayIntAdd:
+            case DelayIAdd:
                 instBuf[i++] = 0x48;
                 instBuf[i++] = 0x01;
                 instBuf[i++] = 0xc8;
@@ -109,6 +115,16 @@ void delay_test(DelayCase caseId, unsigned char *instBuf, int testCnt, int delay
                 instBuf[i++] = 0x48;
                 instBuf[i++] = 0x39;
                 instBuf[i++] = 0xC8;
+                break;
+            // add rax, rcx
+            // cmp rdx, r8
+            case DelayIAddICmp:
+                instBuf[i++] = 0x48;
+                instBuf[i++] = 0x01;
+                instBuf[i++] = 0xc8;
+                instBuf[i++] = 0x4c;
+                instBuf[i++] = 0x39;
+                instBuf[i++] = 0xC2;
                 break;
             }
         }
@@ -174,7 +190,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (caseId < 0 || caseId >= DelayMax) {
-        printf("0 nop\n1 int add\n2 float add\n3 cmp\n");
+        printf("0 nop\n1 iadd\n2 fadd\n3 cmp\n4 add+cmp\n");
     }
 
     printf("case: %s\ndelayCnt:%d codeDupCnt:%d, codeLoopCnt:%d\n", DelayCaseName[caseId], delayCnt, codeDupCnt,
