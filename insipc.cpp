@@ -40,8 +40,7 @@ template <int Cnt> inline void fadd_test() {
     }
     unsigned long long end = getclock();
     unsigned long long clock = end - start;
-    printf("%f, %lld, %f\n", (double)clock / (LoopCnt * Cnt), clock / LoopCnt,
-           c);
+    printf("%f, %lld, %f\n", (double)clock / (LoopCnt * Cnt), clock / LoopCnt, c);
 }
 
 template <int Cnt> inline void fma_test() {
@@ -59,8 +58,7 @@ template <int Cnt> inline void fma_test() {
     }
     unsigned long long end = getclock();
     unsigned long long clock = end - start;
-    printf("%f, %lld, %f\n", (double)clock / (LoopCnt * Cnt), clock / LoopCnt,
-           c);
+    printf("%f, %lld, %f\n", (double)clock / (LoopCnt * Cnt), clock / LoopCnt, c);
 }
 
 template <int Cnt> inline void sqrtsd_test() {

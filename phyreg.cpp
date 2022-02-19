@@ -112,16 +112,13 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    printf("nopStart:%d, addEnd:%d, addStep:%d, delayCnt:%d\n", addBase, addEnd,
-           addStep, delayCnt);
+    printf("nopStart:%d, addEnd:%d, addStep:%d, delayCnt:%d\n", addBase, addEnd, addStep, delayCnt);
     SetProcessAffinityMask(GetCurrentProcess(), 0x10);
     SetProcessPriorityBoost(GetCurrentProcess(), true);
     SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
     SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
-    unsigned char *code = (unsigned char *)VirtualAlloc(
-        0, 0x1001000, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-    unsigned char *instBuf =
-        (unsigned char *)((size_t)(code + 0xfff) & (~0xfff));
+    unsigned char *code = (unsigned char *)VirtualAlloc(0, 0x1001000, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+    unsigned char *instBuf = (unsigned char *)((size_t)(code + 0xfff) & (~0xfff));
     fillnop(instBuf, 0x1000000);
 
     for (int addCnt = addBase; addCnt < addEnd; addCnt += addStep) {

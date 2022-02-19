@@ -16,8 +16,7 @@ void fillnop(unsigned char *instBuf, unsigned sizeBytes) {
 #endif
 }
 
-void rob_test(unsigned char *instBuf, int testCnt, int delayCnt, int codeDupCnt,
-              int codeLoopCnt) {
+void rob_test(unsigned char *instBuf, int testCnt, int delayCnt, int codeDupCnt, int codeLoopCnt) {
     int i = 0;
 #ifdef __aarch64__
     // generate sqrt d0, d0
@@ -116,10 +115,8 @@ int main(int argc, char *argv[]) {
     SetProcessPriorityBoost(GetCurrentProcess(), true);
     SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
     SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
-    unsigned char *code = (unsigned char *)VirtualAlloc(
-        0, 0x1001000, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-    unsigned char *instBuf =
-        (unsigned char *)((size_t)(code + 0xfff) & (~0xfff));
+    unsigned char *code = (unsigned char *)VirtualAlloc(0, 0x1001000, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+    unsigned char *instBuf = (unsigned char *)((size_t)(code + 0xfff) & (~0xfff));
     fillnop(instBuf, 0x1000000);
 
     for (int testCnt = nopBase; testCnt < nopEnd; testCnt += nopStep) {
