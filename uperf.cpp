@@ -37,12 +37,13 @@ void delay_test(DelayCase caseId, unsigned char *instBuf, int testCnt, int delay
             inst[i++] = 0x1e61c000;
         }
 
-        // generate nop
         for (int j = 0; j < testCnt; j++) {
             switch (caseId) {
+            // generate nop
             case DelayNop:
                 inst[i++] = 0xd503201f;
                 break;
+            // generate add x0, x1, x1
             case DelayIntAdd:
                 inst[i++] = 0x8b010020;
                 break;
@@ -69,12 +70,13 @@ void delay_test(DelayCase caseId, unsigned char *instBuf, int testCnt, int delay
             instBuf[i++] = 0xc0;
         }
 
-        // generate nop
         for (int j = 0; j < testCnt; j++) {
             switch (caseId) {
+            // generate nop
             case DelayNop:
                 instBuf[i++] = 0x90;
                 break;
+            // generate add rax, rcx
             case DelayIntAdd:
                 instBuf[i++] = 0x48;
                 instBuf[i++] = 0x01;
