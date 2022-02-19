@@ -116,9 +116,9 @@ void delay_test(DelayCase caseId, unsigned char *instBuf, int testCnt, int delay
 }
 
 int main(int argc, char *argv[]) {
-    int nopBase = 100;
-    int nopEnd = 1000;
-    int nopStep = 10;
+    int testBase = 100;
+    int testEnd = 1000;
+    int testStep = 10;
     int delayCnt = 10;
     int codeDupCnt = 64;
     int codeLoopCnt = 1000;
@@ -128,11 +128,11 @@ int main(int argc, char *argv[]) {
         if (strcmp(argv[i], "-case") == 0)
             caseId = static_cast<DelayCase>(atoi(argv[i + 1]));
         else if (strcmp(argv[i], "-start") == 0)
-            nopBase = atoi(argv[i + 1]);
+            testBase = atoi(argv[i + 1]);
         else if (strcmp(argv[i], "-end") == 0)
-            nopEnd = atoi(argv[i + 1]);
+            testEnd = atoi(argv[i + 1]);
         else if (strcmp(argv[i], "-step") == 0)
-            nopStep = atoi(argv[i + 1]);
+            testStep = atoi(argv[i + 1]);
         else if (strcmp(argv[i], "-delay") == 0)
             delayCnt = atoi(argv[i + 1]);
         else if (strcmp(argv[i], "-dup") == 0)
@@ -155,8 +155,8 @@ int main(int argc, char *argv[]) {
         printf("0 nop\n1 int add\n");
     }
 
-    printf("case: %s\nstart:%d end:%d step:%d\ndelayCnt:%d codeDupCnt:%d, codeLoopCnt:%d\n", DelayCaseName[caseId],
-           nopBase, nopEnd, nopStep, delayCnt, codeDupCnt, codeLoopCnt);
+    printf("case: %s\ndelayCnt:%d codeDupCnt:%d, codeLoopCnt:%d\n", DelayCaseName[caseId], delayCnt, codeDupCnt,
+           codeLoopCnt);
     SetProcessAffinityMask(GetCurrentProcess(), 0x10);
     SetProcessPriorityBoost(GetCurrentProcess(), true);
     SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
@@ -165,7 +165,7 @@ int main(int argc, char *argv[]) {
     unsigned char *instBuf = (unsigned char *)((size_t)(code + 0xfff) & (~0xfff));
     fillnop(instBuf, 0x1000000);
 
-    for (int testCnt = nopBase; testCnt < nopEnd; testCnt += nopStep) {
+    for (int testCnt = testBase; testCnt < testEnd; testCnt += testStep) {
         printf("%d, ", testCnt);
         delay_test(caseId, instBuf, testCnt, delayCnt, codeDupCnt, codeLoopCnt);
         printf("\n");
