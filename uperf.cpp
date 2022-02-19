@@ -13,6 +13,7 @@
 // https://armconverter.com/
 // https://defuse.ca/online-x86-assembler.htm
 
+// @todo: FAdd should replace the sqrt delay to idiv/udiv
 enum DelayCase { DelayNop, DelayIAdd, DelayFAdd, DelayCmp, DelayIAddICmp, DelayMax };
 
 const char *DelayCaseName[DelayMax] = {"Sqrt Delay + Nop", "Sqrt Delay + IAdd", "Sqrt Delay + FAdd", "Sqrt Delay + Cmp",
