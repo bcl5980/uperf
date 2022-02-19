@@ -19,9 +19,13 @@ void fillnop(unsigned char *instBuf, unsigned sizeBytes) {
 void rob_test(unsigned char *instBuf, int testCnt, int delayCnt, int codeDupCnt, int codeLoopCnt) {
     int i = 0;
 #ifdef __aarch64__
-    // generate sqrt d0, d0
+    // Microsft AARCH64 calling convention:
+    // X0-X17, v0-v7, v16-v31 volatile, we can use them
+    // X18-X30, v8-v15 nonvolatile, we can't use them
+    // https://docs.microsoft.com/en-us/cpp/build/arm64-windows-abi-conventions?view=msvc-170
     unsigned int *inst = (unsigned int *)instBuf;
     for (int k = 0; k < codeDupCnt; k++) {
+        // generate sqrt d0, d0
         for (int j = 0; j < delayCnt; j++) {
             inst[i++] = 0x1e61c000;
         }
@@ -38,6 +42,10 @@ void rob_test(unsigned char *instBuf, int testCnt, int delayCnt, int codeDupCnt,
     __dmb(_ARM64_BARRIER_SY); // data memory barrier
     __isb(_ARM64_BARRIER_SY); // instruction barrier
 #else
+    // Microsft X64 calling convention:
+    // RAX, RCX, RDX, R8, R9, R10, R11, and XMM0-XMM5 volatile, we can use them without saving
+    // RBX, RBP, RDI, RSI, RSP, R12, R13, R14, R15, and XMM6-XMM15 nonvolatile, we can't use them
+    // https://docs.microsoft.com/en-us/cpp/build/x64-calling-convention?view=msvc-170
     for (int k = 0; k < codeDupCnt; k++) {
         // generate sqrtsd %xmm0, %xmm0
         for (int j = 0; j < delayCnt; j++) {
