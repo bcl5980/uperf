@@ -5,6 +5,11 @@
 
 #include "clock.h"
 
+// Online asm generate
+// https://disasm.pro/
+// https://armconverter.com/
+// https://defuse.ca/online-x86-assembler.htm
+
 enum DelayCase { DelayNop, DelayIntAdd, DelayMax };
 
 const char *DelayCaseName[DelayMax] = {
@@ -25,6 +30,7 @@ void fillnop(unsigned char *instBuf, unsigned sizeBytes) {
 
 void delay_test(DelayCase caseId, unsigned char *instBuf, int testCnt, int delayCnt, int codeDupCnt, int codeLoopCnt) {
     int i = 0;
+
 #ifdef __aarch64__
     // Microsft AARCH64 calling convention:
     // X0-X17, v0-v7, v16-v31 volatile, we can use them
