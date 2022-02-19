@@ -108,9 +108,8 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    printf("testStart:%d, testEnd:%d, testStep:%d, delayCnt:%d, codeDupCnt:%d, "
-           "codeLoopCnt:%d\n",
-           nopBase, nopEnd, nopStep, delayCnt, codeDupCnt, codeLoopCnt);
+    printf("testStart:%d, testEnd:%d, testStep:%d, delayCnt:%d, codeDupCnt:%d, codeLoopCnt:%d\n", nopBase, nopEnd,
+           nopStep, delayCnt, codeDupCnt, codeLoopCnt);
     SetProcessAffinityMask(GetCurrentProcess(), 0x10);
     SetProcessPriorityBoost(GetCurrentProcess(), true);
     SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
