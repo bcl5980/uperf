@@ -14,10 +14,10 @@
 // https://defuse.ca/online-x86-assembler.htm
 
 // @todo: FAdd should replace the sqrt delay to idiv/udiv
-enum DelayCase { DelayNop, DelayIAdd, DelayFAdd, DelayCmp, DelayIAddICmp, DelayMax };
+enum DelayCase { DelayNop, DelayIAdd, DelayFAdd, DelayCmp, DelayIAddICmp, DelayIFAdd, DelayMax };
 
-const char *DelayCaseName[DelayMax] = {"Sqrt Delay + Nop", "Sqrt Delay + IAdd", "Sqrt Delay + FAdd", "Sqrt Delay + Cmp",
-                                       "Sqrt Delay + Add&Cmp"};
+const char *DelayCaseName[DelayMax] = {"Sqrt Delay + Nop", "Sqrt Delay + IAdd",    "Sqrt Delay + FAdd",
+                                       "Sqrt Delay + Cmp", "Sqrt Delay + Add&Cmp", "Sqrt Delay + IAdd&FAdd"};
 
 void fillnop(unsigned char *instBuf, unsigned sizeBytes) {
 #ifdef __aarch64__
@@ -68,6 +68,12 @@ void delay_test(DelayCase caseId, unsigned char *instBuf, int testCnt, int delay
             case DelayIAddICmp:
                 inst[i++] = 0x8b010020;
                 inst[i++] = 0xeb03005f;
+                break;
+            // add x0, x1, x1
+            // fadd s1, s2, s2
+            case DelayIFAdd:
+                inst[i++] = 0x8b010020;
+                inst[i++] = 0x1e222841;
                 break;
             }
         }
@@ -126,6 +132,17 @@ void delay_test(DelayCase caseId, unsigned char *instBuf, int testCnt, int delay
                 instBuf[i++] = 0x4c;
                 instBuf[i++] = 0x39;
                 instBuf[i++] = 0xC2;
+                break;
+            // add rax, rcx
+            // addss xmm2, xmm3
+            case DelayIFAdd:
+                instBuf[i++] = 0x48;
+                instBuf[i++] = 0x01;
+                instBuf[i++] = 0xc8;
+                instBuf[i++] = 0xf3;
+                instBuf[i++] = 0x0f;
+                instBuf[i++] = 0x58;
+                instBuf[i++] = 0xd3;
                 break;
             }
         }
@@ -191,7 +208,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (caseId < 0 || caseId >= DelayMax) {
-        printf("0 nop\n1 iadd\n2 fadd\n3 cmp\n4 add+cmp\n");
+        printf("0 nop\n1 iadd\n2 fadd\n3 cmp\n4 add+cmp\n5 iadd+fadd\n");
     }
 
     printf("case: %s\ndelayCnt:%d codeDupCnt:%d, codeLoopCnt:%d\n", DelayCaseName[caseId], delayCnt, codeDupCnt,
