@@ -1,12 +1,11 @@
-#include <windows.h>
 #include <intrin.h>
-#include <stdio.h>
 #include <math.h>
+#include <stdio.h>
+#include <windows.h>
 
 #include "clock.h"
 
-void fillnop(unsigned char *instBuf, unsigned sizeBytes)
-{
+void fillnop(unsigned char *instBuf, unsigned sizeBytes) {
 #ifdef __aarch64__
     unsigned nopCnt = sizeBytes / 4;
     unsigned *inst = (unsigned *)instBuf;
@@ -17,26 +16,19 @@ void fillnop(unsigned char *instBuf, unsigned sizeBytes)
 #endif
 }
 
-void rob_test(unsigned char *instBuf, int nopCnt, int sqrtCnt)
-{
+void rob_test(unsigned char *instBuf, int testCnt, int delayCnt, int codeDupCnt,
+              int codeLoopCnt) {
     int i = 0;
-    const static int GenCodeCnt = 64;
 #ifdef __aarch64__
-    // double d = (double)rand();
-    // d = sqrt(d);
-
     // generate sqrt d0, d0
     unsigned int *inst = (unsigned int *)instBuf;
-    for (int k = 0; k < GenCodeCnt; k++)
-    {
-        for (int j = 0; j < sqrtCnt; j++)
-        {
+    for (int k = 0; k < codeDupCnt; k++) {
+        for (int j = 0; j < delayCnt; j++) {
             inst[i++] = 0x1e61c000;
         }
 
         // generate nop
-        for (int j = 0; j < nopCnt; j++)
-        {
+        for (int j = 0; j < testCnt; j++) {
             inst[i++] = 0xd503201f;
         }
     }
@@ -47,11 +39,9 @@ void rob_test(unsigned char *instBuf, int nopCnt, int sqrtCnt)
     __dmb(_ARM64_BARRIER_SY); // data memory barrier
     __isb(_ARM64_BARRIER_SY); // instruction barrier
 #else
-    for (int k = 0; k < GenCodeCnt; k++)
-    {
+    for (int k = 0; k < codeDupCnt; k++) {
         // generate sqrtsd %xmm0, %xmm0
-        for (int j = 0; j < sqrtCnt; j++)
-        {
+        for (int j = 0; j < delayCnt; j++) {
             instBuf[i++] = 0xf2;
             instBuf[i++] = 0x0f;
             instBuf[i++] = 0x51;
@@ -59,8 +49,7 @@ void rob_test(unsigned char *instBuf, int nopCnt, int sqrtCnt)
         }
 
         // generate nop
-        for (int j = 0; j < nopCnt; j++)
-        {
+        for (int j = 0; j < testCnt; j++) {
             instBuf[i++] = 0x90;
         }
     }
@@ -74,12 +63,9 @@ void rob_test(unsigned char *instBuf, int nopCnt, int sqrtCnt)
     ((size_t(*)(size_t, size_t))instBuf)(r0, r1);
 
     size_t min = -1ull;
-    const static int LoopCnt = 500;
-    for (int k = 0; k < 10; k++)
-    {
+    for (int k = 0; k < 10; k++) {
         size_t start = getclock();
-        for (int i = 0; i < LoopCnt; i++)
-        {
+        for (int i = 0; i < codeLoopCnt; i++) {
             ((size_t(*)(size_t, size_t))instBuf)(r0, r1);
         }
         size_t end = getclock();
@@ -88,46 +74,57 @@ void rob_test(unsigned char *instBuf, int nopCnt, int sqrtCnt)
             min = clock;
     }
 
-    printf("%lld, ", min / (LoopCnt * GenCodeCnt));
+    printf("%lld, ", min / (codeLoopCnt * codeDupCnt));
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     int nopBase = 100;
     int nopEnd = 1000;
     int nopStep = 10;
-    int sqrtCnt = 10;
+    int delayCnt = 10;
+    int codeDupCnt = 64;
+    int codeLoopCnt = 1000;
 
-    for (int i = 1; i < argc; i += 2)
-    {
+    for (int i = 1; i < argc; i += 2) {
         if (strcmp(argv[i], "-start") == 0)
             nopBase = atoi(argv[i + 1]);
         else if (strcmp(argv[i], "-end") == 0)
             nopEnd = atoi(argv[i + 1]);
         else if (strcmp(argv[i], "-step") == 0)
             nopStep = atoi(argv[i + 1]);
-        else if (strcmp(argv[i], "-sqrt") == 0)
-            sqrtCnt = atoi(argv[i + 1]);
-        else
-        {
-            printf("rob -start 100 -end 1000 -step 10 -sqrt 8\n");
+        else if (strcmp(argv[i], "-delay") == 0)
+            delayCnt = atoi(argv[i + 1]);
+        else if (strcmp(argv[i], "-dup") == 0)
+            codeDupCnt = atoi(argv[i + 1]);
+        else if (strcmp(argv[i], "-loop") == 0)
+            codeLoopCnt = atoi(argv[i + 1]);
+        else {
+            printf("rob -start 100\n"
+                   "    -end 1000\n"
+                   "    -step 10\n"
+                   "    -delay 8\n"
+                   "    -dup   64\n"
+                   "    -loop  1000\n");
             return 0;
         }
     }
 
-    printf("nopStart:%d, nopEnd:%d, nopStep:%d, sqrtCnt:%d\n", nopBase, nopEnd, nopStep, sqrtCnt);
+    printf("testStart:%d, testEnd:%d, testStep:%d, delayCnt:%d, codeDupCnt:%d, "
+           "codeLoopCnt:%d\n",
+           nopBase, nopEnd, nopStep, delayCnt, codeDupCnt, codeLoopCnt);
     SetProcessAffinityMask(GetCurrentProcess(), 0x10);
     SetProcessPriorityBoost(GetCurrentProcess(), true);
     SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
     SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
-    unsigned char *code = (unsigned char *)VirtualAlloc(0, 0x1001000, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-    unsigned char *instBuf = (unsigned char *)((size_t)(code + 0xfff) & (~0xfff));
+    unsigned char *code = (unsigned char *)VirtualAlloc(
+        0, 0x1001000, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+    unsigned char *instBuf =
+        (unsigned char *)((size_t)(code + 0xfff) & (~0xfff));
     fillnop(instBuf, 0x1000000);
 
-    for (int nopCnt = nopBase; nopCnt < nopEnd; nopCnt += nopStep)
-    {
-        printf("%d, ", nopCnt);
-        rob_test(instBuf, nopCnt, sqrtCnt);
+    for (int testCnt = nopBase; testCnt < nopEnd; testCnt += nopStep) {
+        printf("%d, ", testCnt);
+        rob_test(instBuf, testCnt, delayCnt, codeDupCnt, codeLoopCnt);
         printf("\n");
     }
     VirtualFree(code, 0x1001000, MEM_RELEASE);
