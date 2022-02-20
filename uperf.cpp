@@ -127,6 +127,7 @@ void delay_test(DelayCase caseId, unsigned char *instBuf, int testCnt, int delay
             instBuf[i++] = 0xc0;
         }
         if (caseId == DelayCJmp) {
+            // test rcx, rcx
             instBuf[i++] = 0x48;
             instBuf[i++] = 0x85;
             instBuf[i++] = 0xC9;
