@@ -14,10 +14,11 @@
 // https://defuse.ca/online-x86-assembler.htm
 
 // @todo: FAdd should replace the sqrt delay to idiv/udiv
-enum DelayCase { DelayNop, DelayIAdd, DelayFAdd, DelayCmp, DelayIAddICmp, DelayIFAdd, DelayMax };
+enum DelayCase { DelayNop, DelayIAdd, DelayFAdd, DelayCmp, DelayIAddICmp, DelayIFAdd, DelayLoad, DelayStore, DelayMax };
 
-const char *DelayCaseName[DelayMax] = {"Sqrt Delay + Nop", "Sqrt Delay + IAdd",    "Sqrt Delay + FAdd",
-                                       "Sqrt Delay + Cmp", "Sqrt Delay + Add&Cmp", "Sqrt Delay + IAdd&FAdd"};
+const char *DelayCaseName[DelayMax] = {"Sqrt Delay + Nop",  "Sqrt Delay + IAdd",    "Sqrt Delay + FAdd",
+                                       "Sqrt Delay + Cmp",  "Sqrt Delay + Add&Cmp", "Sqrt Delay + IAdd&FAdd",
+                                       "Sqrt Delay + Load", "Sqrt Delay + Store"};
 
 void fillnop(unsigned char *instBuf, unsigned sizeBytes) {
 #ifdef __aarch64__
@@ -30,7 +31,8 @@ void fillnop(unsigned char *instBuf, unsigned sizeBytes) {
 #endif
 }
 
-void delay_test(DelayCase caseId, unsigned char *instBuf, int testCnt, int delayCnt, int codeDupCnt, int codeLoopCnt) {
+void delay_test(DelayCase caseId, unsigned char *instBuf, int testCnt, int delayCnt, int codeDupCnt, int codeLoopCnt,
+                size_t *data0, size_t *data1) {
     int i = 0;
 
 #ifdef __aarch64__
@@ -74,6 +76,14 @@ void delay_test(DelayCase caseId, unsigned char *instBuf, int testCnt, int delay
             case DelayIFAdd:
                 inst[i++] = 0x8b010020;
                 inst[i++] = 0x1e222841;
+                break;
+            // ldr x0, [x2]
+            case DelayLoad:
+                inst[i++] = 0xf9400040;
+                break;
+            // str x0, [x2, #8]
+            case DelayStore:
+                inst[i++] = 0xf9000440;
                 break;
             }
         }
@@ -144,6 +154,18 @@ void delay_test(DelayCase caseId, unsigned char *instBuf, int testCnt, int delay
                 instBuf[i++] = 0x58;
                 instBuf[i++] = 0xd3;
                 break;
+            // mov rax, QWORD PTR [r8]
+            case DelayLoad:
+                instBuf[i++] = 0x49;
+                instBuf[i++] = 0x8b;
+                instBuf[i++] = 0x00;
+                break;
+            // mov QWORD PTR [r8], rax
+            case DelayStore:
+                instBuf[i++] = 0x49;
+                instBuf[i++] = 0x89;
+                instBuf[i++] = 0x00;
+                break;
             }
         }
     }
@@ -151,16 +173,18 @@ void delay_test(DelayCase caseId, unsigned char *instBuf, int testCnt, int delay
     instBuf[i++] = 0xc3;
 #endif
 
-    size_t r0 = 0;
-    size_t r1 = 0;
+    size_t r0 = 1;
+    size_t r1 = 1;
+    size_t *r2 = data0;
+    size_t *r3 = data1;
     // warm icache
-    ((size_t(*)(size_t, size_t))instBuf)(r0, r1);
+    ((size_t(*)(size_t, size_t, size_t *, size_t *))instBuf)(r0, r1, r2, r3);
 
     size_t min = -1ull;
     for (int k = 0; k < 10; k++) {
         size_t start = getclock();
         for (int i = 0; i < codeLoopCnt; i++) {
-            ((size_t(*)(size_t, size_t))instBuf)(r0, r1);
+            ((size_t(*)(size_t, size_t, size_t *, size_t *))instBuf)(r0, r1, r2, r3);
         }
         size_t end = getclock();
         size_t clock = end - start;
@@ -178,7 +202,7 @@ int main(int argc, char *argv[]) {
     int delayCnt = 10;
     int codeDupCnt = 64;
     int codeLoopCnt = 1000;
-    DelayCase caseId = DelayNop;
+    DelayCase caseId = DelayStore;
 
     for (int i = 1; i < argc; i += 2) {
         if (strcmp(argv[i], "-case") == 0)
@@ -208,7 +232,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (caseId < 0 || caseId >= DelayMax) {
-        printf("0 nop\n1 iadd\n2 fadd\n3 cmp\n4 add+cmp\n5 iadd+fadd\n");
+        printf("0 nop\n1 iadd\n2 fadd\n3 cmp\n4 add+cmp\n5 iadd+fadd\n6 load\n7 store\n");
     }
 
     printf("case: %s\ndelayCnt:%d codeDupCnt:%d, codeLoopCnt:%d\n", DelayCaseName[caseId], delayCnt, codeDupCnt,
@@ -221,11 +245,22 @@ int main(int argc, char *argv[]) {
     unsigned char *instBuf = (unsigned char *)((size_t)(code + 0xfff) & (~0xfff));
     fillnop(instBuf, 0x1000000);
 
+    size_t *data0 = nullptr;
+    size_t *data1 = nullptr;
+    if (caseId == DelayLoad || caseId == DelayStore) {
+        data0 = new size_t[0x1000000];
+        data1 = new size_t[0x1000000];
+    }
+
     for (int testCnt = testBase; testCnt < testEnd; testCnt += testStep) {
         printf("%d, ", testCnt);
-        delay_test(caseId, instBuf, testCnt, delayCnt, codeDupCnt, codeLoopCnt);
+        delay_test(caseId, instBuf, testCnt, delayCnt, codeDupCnt, codeLoopCnt, data0, data1);
         printf("\n");
     }
     VirtualFree(code, 0x1001000, MEM_RELEASE);
+    if (data0)
+        delete[] data0;
+    if (data1)
+        delete[] data1;
     return 0;
 }
