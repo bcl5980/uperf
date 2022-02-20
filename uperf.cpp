@@ -24,12 +24,14 @@ enum DelayCase {
     DelayLoad,
     DelayStore,
     DelayCJmp,
+    DelayJmp,
     DelayMax
 };
 
 const char *DelayCaseName[DelayMax] = {"Sqrt Delay + Nop",  "Sqrt Delay + IAdd",    "Sqrt Delay + FAdd",
                                        "Sqrt Delay + Cmp",  "Sqrt Delay + Add&Cmp", "Sqrt Delay + IAdd&FAdd",
-                                       "Sqrt Delay + Load", "Sqrt Delay + Store",   "Sqrt Delay + ConditionJump"};
+                                       "Sqrt Delay + Load", "Sqrt Delay + Store",   "Sqrt Delay + ConditionJump",
+                                       "Sqrt Delay + Jump"};
 
 void fillnop(unsigned char *instBuf, unsigned sizeBytes) {
 #ifdef __aarch64__
@@ -103,6 +105,10 @@ void delay_test(DelayCase caseId, unsigned char *instBuf, int testCnt, int delay
             // b.eq .+4
             case DelayCJmp:
                 inst[i++] = 0x54000020;
+                break;
+            // b .+4
+            case DelayJmp:
+                inst[i++] = 0x14000001;
                 break;
             }
         }
@@ -196,6 +202,11 @@ void delay_test(DelayCase caseId, unsigned char *instBuf, int testCnt, int delay
                 instBuf[i++] = 0x75;
                 instBuf[i++] = 0x00;
                 break;
+            // jmp 0
+            case DelayJmp:
+                instBuf[i++] = 0xeb;
+                instBuf[i++] = 0x00;
+                break;
             }
         }
     }
@@ -262,7 +273,9 @@ int main(int argc, char *argv[]) {
     }
 
     if (caseId < 0 || caseId >= DelayMax) {
-        printf("0 nop\n1 iadd\n2 fadd\n3 cmp\n4 add+cmp\n5 iadd+fadd\n6 load\n7 store\n8 conditional jump");
+        printf("0 nop\n1 iadd\n2 fadd\n3 cmp\n4 add+cmp\n5 iadd+fadd\n6 load\n7 store\n8 conditional jump\n9 "
+               "uncondition jump\n");
+        return 0;
     }
 
     printf("case: %s\ndelayCnt:%d codeDupCnt:%d, codeLoopCnt:%d\n", DelayCaseName[caseId], delayCnt, codeDupCnt,
