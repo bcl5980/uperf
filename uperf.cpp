@@ -142,12 +142,15 @@ void delay_test(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
     // RAX, RCX, RDX, R8, R9, R10, R11, and XMM0-XMM5 volatile, we can use them without saving
     // RBX, RBP, RDI, RSI, RSP, R12, R13, R14, R15, and XMM6-XMM15 nonvolatile, we can't use them
     // https://docs.microsoft.com/en-us/cpp/build/x64-calling-convention?view=msvc-170
+
+    static unsigned char addByte0[] = {0x48, 0x48, 0x48, 0x49, 0x49, 0x49, 0x49};
+    static unsigned char addByte2[] = {0xc8, 0xc9, 0xca, 0xc8, 0xc9, 0xca, 0xcb};
     for (int k = 0; k < codeDupCnt; k++) {
         if (caseId == AddNop) {
             for (int j = 0; j < delayCnt; j++) {
-                instBuf[i++] = 0x48; // add rax, rcx
+                instBuf[i++] = addByte0[j % 7]; // add [rax-r11], rcx
                 instBuf[i++] = 0x01;
-                instBuf[i++] = 0xc8;
+                instBuf[i++] = addByte2[j % 7];
             }
         } else {
             for (int j = 0; j < delayCnt; j++) {
@@ -190,9 +193,9 @@ void delay_test(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
                 instBuf[i++] = 0xc9;
                 break;
             case SqrtIAdd:
-                instBuf[i++] = 0x48; // add rax, rcx
+                instBuf[i++] = addByte0[j % 7]; // add [rax-r11], rcx
                 instBuf[i++] = 0x01;
-                instBuf[i++] = 0xc8;
+                instBuf[i++] = addByte2[j % 7];
                 break;
             case UdivFAdd:
                 instBuf[i++] = 0xf3; // addss xmm2, xmm3
