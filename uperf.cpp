@@ -198,10 +198,10 @@ void delay_test(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
                 instBuf[i++] = addByte2[j % 7];
                 break;
             case UdivFAdd:
-                instBuf[i++] = 0xf3; // addss xmm2, xmm3
+                instBuf[i++] = 0xf3; // addss xmm[1-5], xmm3
                 instBuf[i++] = 0x0f;
                 instBuf[i++] = 0x58;
-                instBuf[i++] = 0xd3;
+                instBuf[i++] = 0xce + (j % 5) * 8;
                 break;
             case SqrtCmp:
                 instBuf[i++] = 0x48; // cmp rax, rcx
@@ -209,21 +209,21 @@ void delay_test(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
                 instBuf[i++] = 0xC8;
                 break;
             case SqrtIAddICmp:
-                instBuf[i++] = 0x48; // add rax, rcx
+                instBuf[i++] = addByte0[j % 7]; // add [rax-r11], rcx
                 instBuf[i++] = 0x01;
-                instBuf[i++] = 0xc8;
+                instBuf[i++] = addByte2[j % 7];
                 instBuf[i++] = 0x4c; // cmp rdx, r8
                 instBuf[i++] = 0x39;
                 instBuf[i++] = 0xC2;
                 break;
             case SqrtIFAdd:
-                instBuf[i++] = 0x48; // add rax, rcx
+                instBuf[i++] = addByte0[j % 7]; // add [rax-r11], rcx
                 instBuf[i++] = 0x01;
-                instBuf[i++] = 0xc8;
-                instBuf[i++] = 0xf3; // addss xmm2, xmm3
+                instBuf[i++] = addByte2[j % 7];
+                instBuf[i++] = 0xf3; // addss xmm[1-5], xmm3
                 instBuf[i++] = 0x0f;
                 instBuf[i++] = 0x58;
-                instBuf[i++] = 0xd3;
+                instBuf[i++] = 0xce + (j % 5) * 8;
                 break;
             case SqrtLoad:
                 instBuf[i++] = 0x4d; // mov r8, QWORD PTR [r8]
