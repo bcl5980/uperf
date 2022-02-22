@@ -1,9 +1,9 @@
-OOO Window:  220                   // uperf.exe -step 1 -start 200 -end 240 -delay 20 -case 0
-Int Physical Regs: 132             // uperf.exe -step 1 -start 100 -end 150 -delay 20 -case 1
-Float Physical Regs: 140           // uperf.exe -step 1 -start 100 -end 150 -delay 20 -case 2
+OOO Window:  220
+Int Physical Regs: 132
+Float Physical Regs: 130
 Cmp Flag Reg Looks share with Int Physical Regs
 Load Buffer ? todo
-Store Buffer: 48                   // uperf.exe -step 1 -start 20 -end 80 -delay 20 -case 7
-Condition Jump: 32                 // uperf.exe -step 1 -start 20 -end 50 -delay 25 -case 8
-Uncondition Jump: 32               // uperf.exe -step 1 -start 10 -end 50 -delay 20 -case 9
+Store Buffer: 48
+Condition Jump: 32
+Uncondition Jump: 32
 Condtion And Uncondition Share 32
