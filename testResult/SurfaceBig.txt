@@ -4,6 +4,6 @@ Physical Regs: 96
 Cmp: 36
 Load Buffer: 50
 Store Buffer: ?
-Condition Jump: 16
-Uncondition Jump: 16
-Condtion And Uncondition Jump Share 16
+Condition Jump: 14
+Uncondition Jump: 14
+Condtion And Uncondition Jump Share 14
