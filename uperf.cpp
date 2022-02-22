@@ -16,6 +16,8 @@
 // @todo: x64 FAdd should replace the sqrt delay to idiv/udiv
 enum DelayCase {
     DelayNop,
+    DelayMov,
+    DelayMovSelf,
     DelayIAdd,
     DelayFAdd,
     DelayCmp,
@@ -29,10 +31,11 @@ enum DelayCase {
     DelayMax
 };
 
-const char *DelayCaseName[DelayMax] = {"Sqrt Delay + Nop",  "Sqrt Delay + IAdd",      "Udiv Delay + FAdd",
-                                       "Sqrt Delay + Cmp",  "Sqrt Delay + Add&Cmp",   "Sqrt Delay + IAdd&FAdd",
-                                       "Sqrt Delay + Load", "Sqrt Delay + Store",     "Sqrt Delay + ConditionJump",
-                                       "Sqrt Delay + Jump", "Sqrt Delay + Jump&CJump"};
+const char *DelayCaseName[DelayMax] = {"Sqrt Delay + Nop",       "Sqrt Delay + Mov",           "Sqrt Delay + Mov Self",
+                                       "Sqrt Delay + IAdd",      "Udiv Delay + FAdd",          "Sqrt Delay + Cmp",
+                                       "Sqrt Delay + Add&Cmp",   "Sqrt Delay + IAdd&FAdd",     "Sqrt Delay + Load",
+                                       "Sqrt Delay + Store",     "Sqrt Delay + ConditionJump", "Sqrt Delay + Jump",
+                                       "Sqrt Delay + Jump&CJump"};
 
 void fillnop(unsigned char *instBuf, unsigned sizeBytes) {
 #ifdef __aarch64__
@@ -73,56 +76,50 @@ void delay_test(DelayCase caseId, unsigned char *instBuf, int testCnt, int delay
 
         for (int j = 0; j < testCnt; j++) {
             switch (caseId) {
-            // nop
             case DelayNop:
-                inst[i++] = 0xd503201f;
+                inst[i++] = 0xd503201f; // nop
                 break;
-            // add x0, x1, x1
+            case DelayMov:
+                inst[i++] = 0xaa0103e0; // mov x0, x1
+                break;
+            case DelayMovSelf:
+                inst[i++] = 0xaa0103e1; // mov x1, x1
+                break;
             case DelayIAdd:
-                inst[i++] = 0x8b010020;
+                inst[i++] = 0x8b010020; // add x0, x1, x1
                 break;
-            // fadd s1, s2, s2
             case DelayFAdd:
-                inst[i++] = 0x1e222841;
+                inst[i++] = 0x1e222841; // fadd s1, s2, s2
                 break;
-            // cmp x0, x1
             case DelayCmp:
-                inst[i++] = 0xeb01001f;
+                inst[i++] = 0xeb01001f; // cmp x0, x1
                 break;
-            // add x0, x1, x1
-            // cmp x2, x3
             case DelayIAddICmp:
-                inst[i++] = 0x8b010020;
-                inst[i++] = 0xeb03005f;
+                inst[i++] = 0x8b010020; // add x0, x1, x1
+                inst[i++] = 0xeb03005f; // cmp x2, x3
                 break;
-            // add x0, x1, x1
-            // fadd s1, s2, s2
             case DelayIFAdd:
-                inst[i++] = 0x8b010020;
-                inst[i++] = 0x1e222841;
+                inst[i++] = 0x8b010020; // add x0, x1, x1
+                inst[i++] = 0x1e222841; // fadd s1, s2, s2
                 break;
-            // ldr x2, [x2]
             case DelayLoad:
-                inst[i++] = 0xf9400042;
+                inst[i++] = 0xf9400042; // ldr x2, [x2]
                 break;
-            // str x0, [x2, #8]
             case DelayStore:
-                inst[i++] = 0xf9000440;
+                inst[i++] = 0xf9000440; // str x0, [x2, #8]
                 break;
-            // b.eq .+4
             case DelayCJmp:
-                inst[i++] = 0x54000020;
+                inst[i++] = 0x54000020; // b.eq .+4
                 break;
-            // b .+4
             case DelayJmp:
-                inst[i++] = 0x14000001;
+                inst[i++] = 0x14000001; // b .+4
                 break;
-            // b.eq .+4
-            // b .+4
             case DelayMixJmp:
-                inst[i++] = 0x54000020;
-                inst[i++] = 0x14000001;
+                inst[i++] = 0x54000020; // b.eq .+4
+                inst[i++] = 0x14000001; // b .+4
                 break;
+            default:
+                return;
             }
         }
     }
@@ -154,80 +151,80 @@ void delay_test(DelayCase caseId, unsigned char *instBuf, int testCnt, int delay
 
         for (int j = 0; j < testCnt; j++) {
             switch (caseId) {
-            // nop
             case DelayNop:
-                instBuf[i++] = 0x90;
+                instBuf[i++] = 0x48; // nop
+                instBuf[i++] = 0x89;
+                instBuf[i++] = 0xc8;
                 break;
-            // add rax, rcx
+            case DelayMov:
+                instBuf[i++] = 0x48; // mov rax, rcx
+                instBuf[i++] = 0x89;
+                instBuf[i++] = 0xc8;
+                break;
+            case DelayMovSelf:
+                instBuf[i++] = 0x48; // mov rax, rax
+                instBuf[i++] = 0x89;
+                instBuf[i++] = 0xc0;
+                break;
             case DelayIAdd:
-                instBuf[i++] = 0x48;
+                instBuf[i++] = 0x48; // add rax, rcx
                 instBuf[i++] = 0x01;
                 instBuf[i++] = 0xc8;
                 break;
-            // addss xmm2, xmm3
             case DelayFAdd:
-                instBuf[i++] = 0xf3;
+                instBuf[i++] = 0xf3; // addss xmm2, xmm3
                 instBuf[i++] = 0x0f;
                 instBuf[i++] = 0x58;
                 instBuf[i++] = 0xd3;
                 break;
-            // cmp rax, rcx
             case DelayCmp:
-                instBuf[i++] = 0x48;
+                instBuf[i++] = 0x48; // cmp rax, rcx
                 instBuf[i++] = 0x39;
                 instBuf[i++] = 0xC8;
                 break;
-            // add rax, rcx
-            // cmp rdx, r8
             case DelayIAddICmp:
-                instBuf[i++] = 0x48;
+                instBuf[i++] = 0x48; // add rax, rcx
                 instBuf[i++] = 0x01;
                 instBuf[i++] = 0xc8;
-                instBuf[i++] = 0x4c;
+                instBuf[i++] = 0x4c; // cmp rdx, r8
                 instBuf[i++] = 0x39;
                 instBuf[i++] = 0xC2;
                 break;
-            // add rax, rcx
-            // addss xmm2, xmm3
             case DelayIFAdd:
-                instBuf[i++] = 0x48;
+                instBuf[i++] = 0x48; // add rax, rcx
                 instBuf[i++] = 0x01;
                 instBuf[i++] = 0xc8;
-                instBuf[i++] = 0xf3;
+                instBuf[i++] = 0xf3; // addss xmm2, xmm3
                 instBuf[i++] = 0x0f;
                 instBuf[i++] = 0x58;
                 instBuf[i++] = 0xd3;
                 break;
-            // mov r8, QWORD PTR [r8]
             case DelayLoad:
-                instBuf[i++] = 0x4d;
+                instBuf[i++] = 0x4d; // mov r8, QWORD PTR [r8]
                 instBuf[i++] = 0x8b;
                 instBuf[i++] = 0x00;
                 break;
-            // mov QWORD PTR [r8], rax
             case DelayStore:
-                instBuf[i++] = 0x49;
+                instBuf[i++] = 0x49; // mov QWORD PTR [r8], rax
                 instBuf[i++] = 0x89;
                 instBuf[i++] = 0x00;
                 break;
-            // jnz 0
             case DelayCJmp:
-                instBuf[i++] = 0x75;
+                instBuf[i++] = 0x75; // jnz 0
                 instBuf[i++] = 0x00;
                 break;
-            // jmp 0
             case DelayJmp:
-                instBuf[i++] = 0xeb;
+                instBuf[i++] = 0xeb; // jmp 0
                 instBuf[i++] = 0x00;
                 break;
-            // jnz 0
-            // jmp 0
             case DelayMixJmp:
-                instBuf[i++] = 0x75;
+                instBuf[i++] = 0x75; // jnz 0
                 instBuf[i++] = 0x00;
-                instBuf[i++] = 0xeb;
+                instBuf[i++] = 0xeb; // jmp 0
                 instBuf[i++] = 0x00;
                 break;
+            default:
+                return;
             }
         }
     }
@@ -295,8 +292,9 @@ int main(int argc, char *argv[]) {
     }
 
     if (caseId < 0 || caseId >= DelayMax) {
-        printf("0 nop\n1 iadd\n2 fadd\n3 cmp\n4 add+cmp\n5 iadd+fadd\n6 load\n7 store\n8 conditional jump\n9 "
-               "uncondition jump\n10 jump+condition jump\n");
+        for (int i = 0; i < DelayMax; i++) {
+            printf("%d %s\n", i, DelayCaseName[i]);
+        }
         return 0;
     }
 
