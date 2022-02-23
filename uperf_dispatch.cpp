@@ -14,11 +14,12 @@
 // https://defuse.ca/online-x86-assembler.htm
 
 enum DispatchCase {
-    AddNop, // Dispatch Buffer IALU
+    AddNop, // Test Add Dispatch Queue
+    MulNop, // Test Mul Dispatch Queue
     TestCaseEnd,
 };
 
-const char *TestCaseName[TestCaseEnd] = {"Add + Nop"};
+const char *TestCaseName[TestCaseEnd] = {"Add + Nop", "Mul + Nop"};
 
 void fillnop(unsigned char *instBuf, unsigned sizeBytes) {
 #ifdef __aarch64__
@@ -47,6 +48,12 @@ void delay_test(DispatchCase caseId, unsigned char *instBuf, int testCnt, int ch
             else
                 inst[i++] = 0xd503201f; // nop
             break;
+        case MulNop:
+            if (j < changePoint)
+                inst[i++] = 0x9b017c20; // mul x0, x1, x1
+            else
+                inst[i++] = 0xd503201f; // nop
+            break;
         default:
             return;
         }
@@ -64,6 +71,8 @@ void delay_test(DispatchCase caseId, unsigned char *instBuf, int testCnt, int ch
 
     static unsigned char addByte0[] = {0x48, 0x48, 0x48, 0x49, 0x49, 0x49, 0x49};
     static unsigned char addByte2[] = {0xd8, 0xd9, 0xda, 0xd8, 0xd9, 0xda, 0xdb};
+    static unsigned char mulByte0[] = {0x48, 0x48, 0x48, 0x4c, 0x4c, 0x4c, 0x4c};
+    static unsigned char mulByte3[] = {0xc3, 0xcb, 0xd3, 0xc3, 0xcb, 0xd3, 0xdb};
     for (int j = 0; j < testCnt; j++) {
         switch (caseId) {
         case AddNop:
@@ -71,6 +80,18 @@ void delay_test(DispatchCase caseId, unsigned char *instBuf, int testCnt, int ch
                 instBuf[i++] = addByte0[j % 7]; // add [rax-r11], rbx
                 instBuf[i++] = 0x01;
                 instBuf[i++] = addByte2[j % 7];
+            } else {
+                instBuf[i++] = 0x48; // nop
+                instBuf[i++] = 0x89;
+                instBuf[i++] = 0xc8;
+            }
+            break;
+        case MulNop:
+            if (j < changePoint) {
+                instBuf[i++] = mulByte0[j % 7]; // imul [rax-r11], rbx
+                instBuf[i++] = 0x0f;
+                instBuf[i++] = 0xaf;
+                instBuf[i++] = mulByte3[j % 7];
             } else {
                 instBuf[i++] = 0x48; // nop
                 instBuf[i++] = 0x89;
