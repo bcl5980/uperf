@@ -13,7 +13,7 @@
 // https://armconverter.com/
 // https://defuse.ca/online-x86-assembler.htm
 
-enum TestCase {
+enum DelayTestCase {
     SqrtNop,       // ROB Size
     SqrtMov,       // Check Zero Move feature
     SqrtMovSelf,   // Check Move Self Opt & Physical Reg Size
@@ -28,16 +28,14 @@ enum TestCase {
     SqrtCJmp,      // Condition Jump
     SqrtJmp,       // Jump
     SqrtMixJmp,    // Check if Jump and Condition Jump share or not
-    AddNop,        // Dispatch Buffer IALU
     TestCaseEnd,
 };
 
 const char *TestCaseName[TestCaseEnd] = {
-    "Sqrt Delay + Nop",          "Sqrt Delay + Mov",        "Sqrt Delay + Mov Self",
-    "Sqrt Delay + Mov Self(FP)", "Sqrt Delay + IAdd",       "Udiv Delay + FAdd",
-    "Sqrt Delay + Cmp",          "Sqrt Delay + Add&Cmp",    "Sqrt Delay + IAdd&FAdd",
-    "Sqrt Delay + Load",         "Sqrt Delay + Store",      "Sqrt Delay + ConditionJump",
-    "Sqrt Delay + Jump",         "Sqrt Delay + Jump&CJump", "Add + Nop"};
+    "Sqrt Delay + Nop",       "Sqrt Delay + Mov",       "Sqrt Delay + Mov Self", "Sqrt Delay + Mov Self(FP)",
+    "Sqrt Delay + IAdd",      "Udiv Delay + FAdd",      "Sqrt Delay + Cmp",      "Sqrt Delay + Add&Cmp",
+    "Sqrt Delay + IAdd&FAdd", "Sqrt Delay + Load",      "Sqrt Delay + Store",    "Sqrt Delay + ConditionJump",
+    "Sqrt Delay + Jump",      "Sqrt Delay + Jump&CJump"};
 
 void fillnop(unsigned char *instBuf, unsigned sizeBytes) {
 #ifdef __aarch64__
@@ -50,8 +48,8 @@ void fillnop(unsigned char *instBuf, unsigned sizeBytes) {
 #endif
 }
 
-void delay_test(TestCase caseId, unsigned char *instBuf, int testCnt, int delayCnt, int codeDupCnt, int codeLoopCnt,
-                size_t *data0, size_t *data1) {
+void delay_test(DelayTestCase caseId, unsigned char *instBuf, int testCnt, int delayCnt, int codeDupCnt,
+                int codeLoopCnt, size_t *data0, size_t *data1) {
     int i = 0;
 
 #ifdef __aarch64__
@@ -61,11 +59,7 @@ void delay_test(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
     // https://docs.microsoft.com/en-us/cpp/build/arm64-windows-abi-conventions?view=msvc-170
     unsigned int *inst = (unsigned int *)instBuf;
     for (int k = 0; k < codeDupCnt; k++) {
-        if (caseId == AddNop) {
-            for (int j = 0; j < delayCnt; j++) {
-                inst[i++] = 0x8b010020; // add x0, x1, x1
-            }
-        } else if (caseId == UdivFAdd) {
+        if (caseId == UdivFAdd) {
             for (int j = 0; j < delayCnt; j++) {
                 inst[i++] = 0x9ac10820; // udiv x0, x1, x1
             }
@@ -145,13 +139,7 @@ void delay_test(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
     static unsigned char addByte0[] = {0x48, 0x48, 0x48, 0x49, 0x49, 0x49, 0x49};
     static unsigned char addByte2[] = {0xd8, 0xd9, 0xda, 0xd8, 0xd9, 0xda, 0xdb};
     for (int k = 0; k < codeDupCnt; k++) {
-        if (caseId == AddNop) {
-            for (int j = 0; j < delayCnt; j++) {
-                instBuf[i++] = addByte0[j % 7]; // add [rax-r11], rbx
-                instBuf[i++] = 0x01;
-                instBuf[i++] = addByte2[j % 7];
-            }
-        } else if (caseId == UdivFAdd) {
+        if (caseId == UdivFAdd) {
             for (int j = 0; j < delayCnt; j++) {
                 instBuf[i++] = 0x48; // xor    rdx,rdx
                 instBuf[i++] = 0x31;
@@ -179,7 +167,6 @@ void delay_test(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
         for (int j = 0; j < testCnt; j++) {
             switch (caseId) {
             case SqrtNop:
-            case AddNop:
                 instBuf[i++] = 0x48; // nop
                 instBuf[i++] = 0x89;
                 instBuf[i++] = 0xc8;
@@ -296,11 +283,11 @@ int main(int argc, char *argv[]) {
     int delayCnt = 20;
     int codeDupCnt = 64;
     int codeLoopCnt = 1000;
-    TestCase caseId = SqrtNop;
+    DelayTestCase caseId = SqrtNop;
 
     for (int i = 1; i < argc; i += 2) {
         if (strcmp(argv[i], "-case") == 0)
-            caseId = static_cast<TestCase>(atoi(argv[i + 1]));
+            caseId = static_cast<DelayTestCase>(atoi(argv[i + 1]));
         else if (strcmp(argv[i], "-start") == 0)
             testBase = atoi(argv[i + 1]);
         else if (strcmp(argv[i], "-end") == 0)
