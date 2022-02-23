@@ -107,9 +107,9 @@ void delay_test(DelayTestCase caseId, unsigned char *instBuf, int testCnt, int d
                 inst[i++] = 0xf9400042; // ldr x2, [x2]
                 break;
             case SqrtStore:
-                // it looks A76 have some optimization here, we must use different physical reg to store
-                inst[i++] = 0x91000400;                    // add x0, x0, 1
-                inst[i++] = 0xf9000040 + (j % 32) * 0x400; // str x0, [x2, #8*(j%32)]
+                // it looks A76 have some optimization here, we must change the reg or address
+                inst[i++] = 0xf9000040; // str x0, [x2]
+                inst[i++] = 0x91002042; // add x2, x2, 8
                 break;
             case SqrtCJmp:
                 inst[i++] = 0x54000020; // b.eq .+4
