@@ -7,3 +7,7 @@ Store Buffer: ?
 Condition Jump: 14
 Uncondition Jump: 14
 Condtion And Uncondition Jump Share 14
+
+Renaming IPC: 4
+IADD IPC: 3
+Dispatch Buffer: 32

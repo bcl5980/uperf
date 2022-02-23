@@ -14,12 +14,13 @@
 // https://defuse.ca/online-x86-assembler.htm
 
 enum DispatchCase {
-    AddNop, // Test Add Dispatch Queue
-    MulNop, // Test Mul Dispatch Queue
+    AddNop,    // Test Add Dispatch Buffer
+    MulNop,    // Test Mul Dispatch Buffer
+    AddMulNop, // Test Add/Mul share Dispatch Buffer or not
     TestCaseEnd,
 };
 
-const char *TestCaseName[TestCaseEnd] = {"Add + Nop", "Mul + Nop"};
+const char *TestCaseName[TestCaseEnd] = {"Add + Nop", "Mul + Nop", "1Add&1Mul + Nop"};
 
 void fillnop(unsigned char *instBuf, unsigned sizeBytes) {
 #ifdef __aarch64__
@@ -52,6 +53,13 @@ void delay_test(DispatchCase caseId, unsigned char *instBuf, int testCnt, int ch
             if (j < changePoint)
                 inst[i++] = 0x9b017c20; // mul x0, x1, x1
             else
+                inst[i++] = 0xd503201f; // nop
+            break;
+        case AddMulNop:
+            if (j < changePoint) {
+                inst[i++] = 0x8b010020; // add x0, x1, x1
+                inst[i++] = 0x9b017c22; // mul x2, x1, x1
+            } else
                 inst[i++] = 0xd503201f; // nop
             break;
         default:
@@ -88,6 +96,21 @@ void delay_test(DispatchCase caseId, unsigned char *instBuf, int testCnt, int ch
             break;
         case MulNop:
             if (j < changePoint) {
+                instBuf[i++] = mulByte0[j % 7]; // imul [rax-r11], rbx
+                instBuf[i++] = 0x0f;
+                instBuf[i++] = 0xaf;
+                instBuf[i++] = mulByte3[j % 7];
+            } else {
+                instBuf[i++] = 0x48; // nop
+                instBuf[i++] = 0x89;
+                instBuf[i++] = 0xc8;
+            }
+            break;
+        case AddMulNop:
+            if (j < changePoint) {
+                instBuf[i++] = addByte0[j % 7]; // add [rax-r11], rbx
+                instBuf[i++] = 0x01;
+                instBuf[i++] = addByte2[j % 7];
                 instBuf[i++] = mulByte0[j % 7]; // imul [rax-r11], rbx
                 instBuf[i++] = 0x0f;
                 instBuf[i++] = 0xaf;
@@ -149,13 +172,12 @@ int main(int argc, char *argv[]) {
         else if (strcmp(argv[i], "-loop") == 0)
             codeLoopCnt = atoi(argv[i + 1]);
         else {
-            printf("delay_test -case 0\n"
+            printf("uperf_dispatch -case 0\n"
                    "    -start 1\n"
                    "    -end 400\n"
                    "    -step 1\n"
-                   "    -delay 8\n"
-                   "    -dup   64\n"
-                   "    -loop  1000\n");
+                   "    -change 200\n"
+                   "    -loop  100000\n");
             return 0;
         }
     }

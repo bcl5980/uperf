@@ -301,7 +301,7 @@ int main(int argc, char *argv[]) {
         else if (strcmp(argv[i], "-loop") == 0)
             codeLoopCnt = atoi(argv[i + 1]);
         else {
-            printf("delay_test -case 0\n"
+            printf("uperf -case 0\n"
                    "    -start 100\n"
                    "    -end 1000\n"
                    "    -step 10\n"
