@@ -139,16 +139,16 @@ void delay_test(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
     __isb(_ARM64_BARRIER_SY); // instruction barrier
 #else
     // Microsft X64 calling convention:
-    // RAX, RCX, RDX, R8, R9, R10, R11, and XMM0-XMM5 volatile, we can use them without saving
-    // RBX, RBP, RDI, RSI, RSP, R12, R13, R14, R15, and XMM6-XMM15 nonvolatile, we can't use them
+    // RAX, RCX, RDX, R8, R9, R10, R11, and XMM0-XMM5 volatile, we can write them without saving
+    // RBX, RBP, RDI, RSI, RSP, R12, R13, R14, R15, and XMM6-XMM15 nonvolatile, we can't write them
     // https://docs.microsoft.com/en-us/cpp/build/x64-calling-convention?view=msvc-170
 
     static unsigned char addByte0[] = {0x48, 0x48, 0x48, 0x49, 0x49, 0x49, 0x49};
-    static unsigned char addByte2[] = {0xc8, 0xc9, 0xca, 0xc8, 0xc9, 0xca, 0xcb};
+    static unsigned char addByte2[] = {0xd8, 0xd9, 0xda, 0xd8, 0xd9, 0xda, 0xdb};
     for (int k = 0; k < codeDupCnt; k++) {
         if (caseId == AddNop) {
             for (int j = 0; j < delayCnt; j++) {
-                instBuf[i++] = addByte0[j % 7]; // add [rax-r11], rcx
+                instBuf[i++] = addByte0[j % 7]; // add [rax-r11], rbx
                 instBuf[i++] = 0x01;
                 instBuf[i++] = addByte2[j % 7];
             }
@@ -193,12 +193,12 @@ void delay_test(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
                 instBuf[i++] = 0xc9;
                 break;
             case SqrtIAdd:
-                instBuf[i++] = addByte0[j % 7]; // add [rax-r11], rcx
+                instBuf[i++] = addByte0[j % 7]; // add [rax-r11], rbx
                 instBuf[i++] = 0x01;
                 instBuf[i++] = addByte2[j % 7];
                 break;
             case UdivFAdd:
-                instBuf[i++] = 0xf3; // addss xmm[1-5], xmm3
+                instBuf[i++] = 0xf3; // addss xmm[1-5], xmm6
                 instBuf[i++] = 0x0f;
                 instBuf[i++] = 0x58;
                 instBuf[i++] = 0xce + (j % 5) * 8;
@@ -209,7 +209,7 @@ void delay_test(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
                 instBuf[i++] = 0xC8;
                 break;
             case SqrtIAddICmp:
-                instBuf[i++] = addByte0[j % 7]; // add [rax-r11], rcx
+                instBuf[i++] = addByte0[j % 7]; // add [rax-r11], rbx
                 instBuf[i++] = 0x01;
                 instBuf[i++] = addByte2[j % 7];
                 instBuf[i++] = 0x4c; // cmp rdx, r8
@@ -220,7 +220,7 @@ void delay_test(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
                 instBuf[i++] = addByte0[j % 7]; // add [rax-r11], rcx
                 instBuf[i++] = 0x01;
                 instBuf[i++] = addByte2[j % 7];
-                instBuf[i++] = 0xf3; // addss xmm[1-5], xmm3
+                instBuf[i++] = 0xf3; // addss xmm[1-5], xmm6
                 instBuf[i++] = 0x0f;
                 instBuf[i++] = 0x58;
                 instBuf[i++] = 0xce + (j % 5) * 8;
