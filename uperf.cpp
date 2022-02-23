@@ -13,7 +13,6 @@
 // https://armconverter.com/
 // https://defuse.ca/online-x86-assembler.htm
 
-// @todo: x64 FAdd should replace the sqrt delay to idiv/udiv
 enum TestCase {
     SqrtNop,       // ROB Size
     SqrtMov,       // Check Zero Move feature
@@ -152,6 +151,15 @@ void delay_test(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
                 instBuf[i++] = 0x01;
                 instBuf[i++] = addByte2[j % 7];
             }
+        } else if (caseId == UdivFAdd) {
+            for (int j = 0; j < delayCnt; j++) {
+                instBuf[i++] = 0x48; // xor    rdx,rdx
+                instBuf[i++] = 0x31;
+                instBuf[i++] = 0xd2;
+                instBuf[i++] = 0x48; // div    rcx
+                instBuf[i++] = 0xf7;
+                instBuf[i++] = 0xf1;
+            }
         } else {
             for (int j = 0; j < delayCnt; j++) {
                 instBuf[i++] = 0xf2; // sqrtsd %xmm0, %xmm0
@@ -198,10 +206,10 @@ void delay_test(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
                 instBuf[i++] = addByte2[j % 7];
                 break;
             case UdivFAdd:
-                instBuf[i++] = 0xf3; // addss xmm[1-5], xmm6
+                instBuf[i++] = 0xf3; // addss xmm[0-5], xmm6
                 instBuf[i++] = 0x0f;
                 instBuf[i++] = 0x58;
-                instBuf[i++] = 0xce + (j % 5) * 8;
+                instBuf[i++] = 0xc6 + (j % 6) * 8;
                 break;
             case SqrtCmp:
                 instBuf[i++] = 0x48; // cmp rax, rcx

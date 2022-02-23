@@ -1,6 +1,6 @@
 OOO Window:  505
 Int Physical Regs: ~240
-Float Physical Regs: ~305
+Float Physical Regs: ~296
 Cmp Flag Reg Looks share with Int Physical Regs
 Load Buffer: 192
 Store Buffer: 112
