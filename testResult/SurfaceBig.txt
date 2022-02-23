@@ -1,9 +1,9 @@
-OOO Window: 128
+OOO Window: 120
 Int Physical Regs: 88
 Physical Regs: 96
 Cmp: 36
 Load Buffer: 50
-Store Buffer: ?
+Store Buffer: 60
 Condition Jump: 14
 Uncondition Jump: 14
 Condtion And Uncondition Jump Share 14
