@@ -23,7 +23,7 @@ enum DispatchCase {
 const char *TestCaseName[TestCaseEnd] = {"Add + Nop", "Mul + Nop", "1Add&1Mul + Nop"};
 
 void fillnop(unsigned char *instBuf, unsigned sizeBytes) {
-#ifdef __aarch64__
+#if defined(__aarch64__) || defined(_M_ARM64)
     unsigned nopCnt = sizeBytes / 4;
     unsigned *inst = (unsigned *)instBuf;
     for (int i = 0; i < nopCnt; i++)
@@ -36,7 +36,7 @@ void fillnop(unsigned char *instBuf, unsigned sizeBytes) {
 double genCodeTest(DispatchCase caseId, unsigned char *instBuf, int testCnt, int changePoint, int codeLoopCnt,
                    int recycle) {
     int i = 0;
-#ifdef __aarch64__
+#if defined(__aarch64__) || defined(_M_ARM64)
     // Microsft AARCH64 calling convention:
     // X0-X17, v0-v7, v16-v31 volatile, we can use them
     // X18-X30, v8-v15 nonvolatile, we can't use them
@@ -164,6 +164,7 @@ int main(int argc, char *argv[]) {
     int testStep = 1;
     int codeLoopCnt = 100000;
     int lines = 10;
+    int linestep = 1;
     DispatchCase caseId = AddNop;
 
     for (int i = 1; i < argc; i += 2) {
@@ -177,6 +178,8 @@ int main(int argc, char *argv[]) {
             testStep = atoi(argv[i + 1]);
         else if (strcmp(argv[i], "-lines") == 0)
             lines = atoi(argv[i + 1]);
+        else if (strcmp(argv[i], "-ls") == 0)
+            linestep = atoi(argv[i + 1]);
         else if (strcmp(argv[i], "-loop") == 0)
             codeLoopCnt = atoi(argv[i + 1]);
         else {
@@ -185,6 +188,7 @@ int main(int argc, char *argv[]) {
                    "    -end 400\n"
                    "    -step 1\n"
                    "    -lines 10\n"
+                   "    -ls 1\n"
                    "    -loop  100000\n");
             return 0;
         }
@@ -216,9 +220,13 @@ int main(int argc, char *argv[]) {
 
     for (int testCnt = testBase; testCnt < testEnd; testCnt += testStep) {
         printf("%d, ", testCnt);
-        for (int N = 1; N <= lines; N++) {
-            double clockMin = genCodeTest(caseId, instBuf, testCnt, schQueueIPC * N, codeLoopCnt, mapIPC * N);
+        int firstInstCount = schQueueIPC;
+        int recyclePoint = mapIPC;
+        for (int N = 0; N < lines; N++) {
+            double clockMin = genCodeTest(caseId, instBuf, testCnt, firstInstCount, codeLoopCnt, recyclePoint);
             printf("%.1f, ", clockMin);
+            firstInstCount += schQueueIPC;
+            recyclePoint += mapIPC;
         }
         printf("\n");
     }
