@@ -67,7 +67,7 @@ double genCodeTest(DispatchCase caseId, unsigned char *instBuf, int testCnt, int
                 inst[i++] = 0xd503201f; // nop
             break;
         default:
-            return;
+            return -1;
         }
     }
     // ret 0xd65f03c0
