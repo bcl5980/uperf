@@ -52,7 +52,7 @@ void delay_test(DelayTestCase caseId, unsigned char *instBuf, int testCnt, int d
                 int codeLoopCnt, size_t *data0, size_t *data1) {
     int i = 0;
 
-#ifdef __aarch64__
+#if defined(__aarch64__) || defined(_M_ARM64)
     // Microsft AARCH64 calling convention:
     // X0-X17, v0-v7, v16-v31 volatile, we can use them
     // X18-X30, v8-v15 nonvolatile, we can't use them

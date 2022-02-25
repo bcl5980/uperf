@@ -17,10 +17,12 @@ enum DispatchCase {
     AddNop,    // Test Add Dispatch Buffer
     MulNop,    // Test Mul Dispatch Buffer
     AddMulNop, // Test Add/Mul share Dispatch Buffer or not
+    BranchNop, // Branch Dispatch Buffer
+    FAddNop,   // Test Float Dispatch Buffer
     TestCaseEnd,
 };
 
-const char *TestCaseName[TestCaseEnd] = {"Add + Nop", "Mul + Nop", "1Add&1Mul + Nop"};
+const char *TestCaseName[TestCaseEnd] = {"Add + Nop", "Mul + Nop", "1Add&1Mul + Nop", "Branch + Nop", "FAdd + Nop"};
 
 void fillnop(unsigned char *instBuf, unsigned sizeBytes) {
 #if defined(__aarch64__) || defined(_M_ARM64)
@@ -60,6 +62,18 @@ void genCodetest(DispatchCase caseId, unsigned char *instBuf, int testCnt, int c
                 inst[i++] = 0x8b010020; // add x0, x1, x1
                 inst[i++] = 0x9b017c22; // mul x2, x1, x1
             } else
+                inst[i++] = 0xd503201f; // nop
+            break;
+        case BranchNop:
+            if (j < changePoint)
+                inst[i++] = 0x14000001; // b .+4
+            else
+                inst[i++] = 0x9b017c22; // mul x2, x1, x1
+            break;
+        case FAddNop:
+            if (j < changePoint)
+                inst[i++] = 0x1e222841; // fadd s1, s2, s2
+            else
                 inst[i++] = 0xd503201f; // nop
             break;
         default:
