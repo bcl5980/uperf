@@ -138,10 +138,10 @@ double genCodeTest(DispatchCase caseId, unsigned char *instBuf, int changePoint,
             break;
         case FAddNop:
             if (j < changePoint) {
-                instBuf[i++] = 0xf3; // addss xmm[0-5], xmm6
-                instBuf[i++] = 0x0f;
-                instBuf[i++] = 0x58;
-                instBuf[i++] = 0xc6 + (j % 6) * 8;
+                instBuf[i++] = 0xc5; // VPADDD xmm0, xmm1, xmm1
+                instBuf[i++] = 0xf1;
+                instBuf[i++] = 0xfe;
+                instBuf[i++] = 0xc1;
             } else
                 instBuf[i++] = 0x90;
             break;
