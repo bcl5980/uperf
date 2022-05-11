@@ -20,8 +20,8 @@ enum DelayTestCase {
     SqrtMovSelfFp, // Float version Check Move Self Opt & Physical Reg Size
     SqrtIAdd,      // Int Physical Reg Size
     UdivFAdd,      // Float Physical Reg Size
-    SqrtCmp,       // Flag Physical Reg Size
-    SqrtIAddICmp,  // Check if the Flag and Int Physical Reg is shared or not
+    SqrtCmp,       // Status Physical Reg Size
+    SqrtIAddICmp,  // Check if the Status and Int Physical Reg is shared or not
     SqrtIFAdd,     // Check if the Float and Int Physical Reg is shared or not
     SqrtLoad,      // Load Buffer Size
     SqrtStore,     // Store Buffer Size
@@ -231,6 +231,9 @@ void delay_test(DelayTestCase caseId, unsigned char *instBuf, int testCnt, int d
                 instBuf[i++] = 0x49; // mov QWORD PTR [r8], rax
                 instBuf[i++] = 0x89;
                 instBuf[i++] = 0x00;
+                instBuf[i++] = 0x48; // inc rax
+                instBuf[i++] = 0xff;
+                instBuf[i++] = 0xc0;
                 break;
             case SqrtCJmp:
                 instBuf[i++] = 0x75; // jnz 0
@@ -275,7 +278,7 @@ void delay_test(DelayTestCase caseId, unsigned char *instBuf, int testCnt, int d
             min = clock;
     }
 
-    printf("%.1f, ", (double)min / (codeLoopCnt * codeDupCnt));
+    printf("%.1f ", (double)min / (codeLoopCnt * codeDupCnt));
 }
 
 int main(int argc, char *argv[]) {
@@ -283,7 +286,7 @@ int main(int argc, char *argv[]) {
     int testEnd = 1000;
     int testStep = 10;
     int delayCnt = 20;
-    int codeDupCnt = 64;
+    int codeDupCnt = 1;
     int codeLoopCnt = 1000;
     DelayTestCase caseId = SqrtNop;
 
@@ -303,13 +306,13 @@ int main(int argc, char *argv[]) {
         else if (strcmp(argv[i], "-loop") == 0)
             codeLoopCnt = atoi(argv[i + 1]);
         else {
-            printf("uperf -case 0\n"
-                   "    -start 100\n"
-                   "    -end 1000\n"
-                   "    -step 10\n"
-                   "    -delay 8\n"
-                   "    -dup   64\n"
-                   "    -loop  1000\n");
+            printf("uperf -case  0\n"
+                   "      -start 100\n"
+                   "      -end   1000\n"
+                   "      -step  10\n"
+                   "      -delay 8\n"
+                   "      -dup   1\n"
+                   "      -loop  1000\n");
             return 0;
         }
     }
@@ -341,7 +344,7 @@ int main(int argc, char *argv[]) {
     }
 
     for (int testCnt = testBase; testCnt < testEnd; testCnt += testStep) {
-        printf("%d, ", testCnt);
+        printf("%d ", testCnt);
         delay_test(caseId, instBuf, testCnt, delayCnt, codeDupCnt, codeLoopCnt, data0, data1);
         printf("\n");
     }

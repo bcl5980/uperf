@@ -17,10 +17,12 @@ enum DispatchCase {
     AddNop,    // Test Add Dispatch Buffer
     MulNop,    // Test Mul Dispatch Buffer
     AddMulNop, // Test Add/Mul share Dispatch Buffer or not
+    BranchNop, // Branch Dispatch Buffer
+    FAddNop,   // Test Float Dispatch Buffer
     TestCaseEnd,
 };
 
-const char *TestCaseName[TestCaseEnd] = {"Add + Nop", "Mul + Nop", "1Add&1Mul + Nop"};
+const char *TestCaseName[TestCaseEnd] = {"Add + Nop", "Mul + Nop", "1Add&1Mul + Nop", "Branch + Nop", "FAdd + Nop"};
 
 void fillnop(unsigned char *instBuf, unsigned sizeBytes) {
 #if defined(__aarch64__) || defined(_M_ARM64)
@@ -33,8 +35,7 @@ void fillnop(unsigned char *instBuf, unsigned sizeBytes) {
 #endif
 }
 
-double genCodeTest(DispatchCase caseId, unsigned char *instBuf, int testCnt, int changePoint, int codeLoopCnt,
-                   int recycle) {
+double genCodeTest(DispatchCase caseId, unsigned char *instBuf, int changePoint, int testCnt, int codeLoopCnt) {
     int i = 0;
 #if defined(__aarch64__) || defined(_M_ARM64)
     // Microsft AARCH64 calling convention:
@@ -43,27 +44,36 @@ double genCodeTest(DispatchCase caseId, unsigned char *instBuf, int testCnt, int
     // https://docs.microsoft.com/en-us/cpp/build/arm64-windows-abi-conventions?view=msvc-170
     unsigned int *inst = (unsigned int *)instBuf;
     for (int j = 0; j < testCnt; j++) {
-        int cj = j;
-        if (recycle != 0)
-            cj %= recycle;
         switch (caseId) {
         case AddNop:
-            if (cj < changePoint)
+            if (j < changePoint)
                 inst[i++] = 0x8b010020; // add x0, x1, x1
             else
                 inst[i++] = 0xd503201f; // nop
             break;
         case MulNop:
-            if (cj < changePoint)
+            if (j < changePoint)
                 inst[i++] = 0x9b017c20; // mul x0, x1, x1
             else
                 inst[i++] = 0xd503201f; // nop
             break;
         case AddMulNop:
-            if (cj < changePoint) {
+            if (j < changePoint) {
                 inst[i++] = 0x8b010020; // add x0, x1, x1
                 inst[i++] = 0x9b017c22; // mul x2, x1, x1
             } else
+                inst[i++] = 0xd503201f; // nop
+            break;
+        case BranchNop:
+            if (j < changePoint)
+                inst[i++] = 0x14000001; // b .+4
+            else
+                inst[i++] = 0x9b017c22; // mul x2, x1, x1
+            break;
+        case FAddNop:
+            if (j < changePoint)
+                inst[i++] = 0x1e222841; // fadd s1, s2, s2
+            else
                 inst[i++] = 0xd503201f; // nop
             break;
         default:
@@ -86,35 +96,28 @@ double genCodeTest(DispatchCase caseId, unsigned char *instBuf, int testCnt, int
     static unsigned char mulByte0[] = {0x48, 0x48, 0x48, 0x4c, 0x4c, 0x4c, 0x4c};
     static unsigned char mulByte3[] = {0xc3, 0xcb, 0xd3, 0xc3, 0xcb, 0xd3, 0xdb};
     for (int j = 0; j < testCnt; j++) {
-        int cj = j;
-        if (recycle != 0)
-            cj %= recycle;
         switch (caseId) {
         case AddNop:
-            if (cj < changePoint) {
+            if (j < changePoint) {
                 instBuf[i++] = addByte0[j % 7]; // add [rax-r11], rbx
                 instBuf[i++] = 0x01;
                 instBuf[i++] = addByte2[j % 7];
             } else {
-                instBuf[i++] = 0x48; // nop
-                instBuf[i++] = 0x89;
-                instBuf[i++] = 0xc8;
+                instBuf[i++] = 0x90;
             }
             break;
         case MulNop:
-            if (cj < changePoint) {
+            if (j < changePoint) {
                 instBuf[i++] = mulByte0[j % 7]; // imul [rax-r11], rbx
                 instBuf[i++] = 0x0f;
                 instBuf[i++] = 0xaf;
                 instBuf[i++] = mulByte3[j % 7];
             } else {
-                instBuf[i++] = 0x48; // nop
-                instBuf[i++] = 0x89;
-                instBuf[i++] = 0xc8;
+                instBuf[i++] = 0x90;
             }
             break;
         case AddMulNop:
-            if (cj < changePoint) {
+            if (j < changePoint) {
                 instBuf[i++] = addByte0[j % 7]; // add [rax-r11], rbx
                 instBuf[i++] = 0x01;
                 instBuf[i++] = addByte2[j % 7];
@@ -123,10 +126,24 @@ double genCodeTest(DispatchCase caseId, unsigned char *instBuf, int testCnt, int
                 instBuf[i++] = 0xaf;
                 instBuf[i++] = mulByte3[j % 7];
             } else {
-                instBuf[i++] = 0x48; // nop
-                instBuf[i++] = 0x89;
-                instBuf[i++] = 0xc8;
+                instBuf[i++] = 0x90;
             }
+            break;
+        case BranchNop:
+            if (j < changePoint) {
+                instBuf[i++] = 0xeb; // jmp 0
+                instBuf[i++] = 0x00;
+            } else
+                instBuf[i++] = 0x90;
+            break;
+        case FAddNop:
+            if (j < changePoint) {
+                instBuf[i++] = 0xf3; // addss xmm[0-5], xmm6
+                instBuf[i++] = 0x0f;
+                instBuf[i++] = 0x58;
+                instBuf[i++] = 0xc6 + (j % 6) * 8;
+            } else
+                instBuf[i++] = 0x90;
             break;
         default:
             return -1;
@@ -143,7 +160,7 @@ double genCodeTest(DispatchCase caseId, unsigned char *instBuf, int testCnt, int
     ((size_t(*)(size_t, size_t))instBuf)(r0, r1);
 
     size_t min = -1ull;
-    for (int k = 0; k < 10; k++) {
+    for (int k = 0; k < 25; k++) {
         size_t start = getclock();
         for (int i = 0; i < codeLoopCnt; i++) {
             ((size_t(*)(size_t, size_t))instBuf)(r0, r1);
@@ -159,12 +176,11 @@ double genCodeTest(DispatchCase caseId, unsigned char *instBuf, int testCnt, int
 }
 
 int main(int argc, char *argv[]) {
-    int testBase = 1;
-    int testEnd = 200;
+    int testBase = 250;
+    int testEnd = 400;
     int testStep = 1;
+    int changePoint = 200;
     int codeLoopCnt = 100000;
-    int lines = 10;
-    int linestep = 1;
     DispatchCase caseId = AddNop;
 
     for (int i = 1; i < argc; i += 2) {
@@ -176,10 +192,8 @@ int main(int argc, char *argv[]) {
             testEnd = atoi(argv[i + 1]);
         else if (strcmp(argv[i], "-step") == 0)
             testStep = atoi(argv[i + 1]);
-        else if (strcmp(argv[i], "-lines") == 0)
-            lines = atoi(argv[i + 1]);
-        else if (strcmp(argv[i], "-ls") == 0)
-            linestep = atoi(argv[i + 1]);
+        else if (strcmp(argv[i], "-change_point") == 0)
+            changePoint = atoi(argv[i + 1]);
         else if (strcmp(argv[i], "-loop") == 0)
             codeLoopCnt = atoi(argv[i + 1]);
         else {
@@ -187,8 +201,7 @@ int main(int argc, char *argv[]) {
                    "    -start 1\n"
                    "    -end 400\n"
                    "    -step 1\n"
-                   "    -lines 10\n"
-                   "    -ls 1\n"
+                   "    -change_point 200"
                    "    -loop  100000\n");
             return 0;
         }
@@ -205,29 +218,16 @@ int main(int argc, char *argv[]) {
     unsigned char *instBuf = (unsigned char *)((size_t)(code + 0xfff) & (~0xfff));
     fillnop(instBuf, 0x1000000);
 
-    printf("case: %s\nstart:%d, end:%d, step:%d, lines:%d, loop:%d\n", TestCaseName[caseId], testBase, testEnd,
-           testStep, lines, codeLoopCnt);
+    printf("case: %s\nstart:%d, end:%d, loop:%d\n", TestCaseName[caseId], testBase, testEnd, codeLoopCnt);
     SetProcessAffinityMask(GetCurrentProcess(), 0x10);
     SetProcessPriorityBoost(GetCurrentProcess(), true);
     SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
     SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
 
-    double testClock = genCodeTest(caseId, instBuf, 100, 100, 100000, 0);
-    unsigned schQueueIPC = (unsigned)(100 / testClock + 0.5);
-    testClock = genCodeTest(caseId, instBuf, 100, 0, 100000, 0);
-    unsigned mapIPC = (unsigned)(100 / testClock + 0.5);
-    printf("test Inst IPC:%d/%d\n", schQueueIPC, mapIPC);
-
     for (int testCnt = testBase; testCnt < testEnd; testCnt += testStep) {
         printf("%d, ", testCnt);
-        int firstInstCount = schQueueIPC;
-        int recyclePoint = mapIPC;
-        for (int N = 0; N < lines; N++) {
-            double clockMin = genCodeTest(caseId, instBuf, testCnt, firstInstCount, codeLoopCnt, recyclePoint);
-            printf("%.1f, ", clockMin);
-            firstInstCount += schQueueIPC;
-            recyclePoint += mapIPC;
-        }
+        double clockMin = genCodeTest(caseId, instBuf, changePoint, testCnt, codeLoopCnt);
+        printf("%.1f, ", clockMin);
         printf("\n");
     }
     VirtualFree(code, 0x1001000, MEM_RELEASE);
