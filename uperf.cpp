@@ -19,7 +19,7 @@ enum DelayTestCase {
     SqrtMovSelf,   // Check Move Self Opt & Physical Reg Size
     SqrtMovSelfFp, // Float version Check Move Self Opt & Physical Reg Size
     SqrtIAdd,      // Int Physical Reg Size
-    UdivFAdd,      // Float Physical Reg Size
+    UdivVFAdd,     // Float Physical Reg Size
     SqrtCmp,       // Status Physical Reg Size
     SqrtIAddICmp,  // Check if the Status and Int Physical Reg is shared or not
     SqrtIFAdd,     // Check if the Float and Int Physical Reg is shared or not
@@ -28,14 +28,19 @@ enum DelayTestCase {
     SqrtCJmp,      // Condition Jump
     SqrtJmp,       // Jump
     SqrtMixJmp,    // Check if Jump and Condition Jump share or not
+    SqrtNopIAdd,   // Test ROB NOP retire speed, rob clear nop speed
+    SqrtVFAddIAdd, // Test ROB register retire speed
     TestCaseEnd,
 };
 
 const char *TestCaseName[TestCaseEnd] = {
-    "Sqrt Delay + Nop",       "Sqrt Delay + Mov",       "Sqrt Delay + Mov Self", "Sqrt Delay + Mov Self(FP)",
-    "Sqrt Delay + IAdd",      "Udiv Delay + FAdd",      "Sqrt Delay + Cmp",      "Sqrt Delay + Add&Cmp",
-    "Sqrt Delay + IAdd&FAdd", "Sqrt Delay + Load",      "Sqrt Delay + Store",    "Sqrt Delay + ConditionJump",
-    "Sqrt Delay + Jump",      "Sqrt Delay + Jump&CJump"};
+    "Sqrt Delay + Nop",         "Sqrt Delay + Mov",        "Sqrt Delay + Mov Self",   "Sqrt Delay + Mov Self(FP)",
+    "Sqrt Delay + IAdd",        "Udiv Delay + V/FAdd",     "Sqrt Delay + Cmp",        "Sqrt Delay + Add&Cmp",
+    "Sqrt Delay + IAdd&V/FAdd", "Sqrt Delay + Load",       "Sqrt Delay + Store",      "Sqrt Delay + ConditionJump",
+    "Sqrt Delay + Jump",        "Sqrt Delay + Jump&CJump", "Sqrt Delay + Nop + IAdd", "Sqrt Delay + V/FAdd + IAdd"};
+
+// TODO: add into param
+const static int PhyIntFullSize = 160;
 
 void fillnop(unsigned char *instBuf, unsigned sizeBytes) {
 #ifdef __aarch64__
@@ -59,7 +64,7 @@ void delay_test(DelayTestCase caseId, unsigned char *instBuf, int testCnt, int d
     // https://docs.microsoft.com/en-us/cpp/build/arm64-windows-abi-conventions?view=msvc-170
     unsigned int *inst = (unsigned int *)instBuf;
     for (int k = 0; k < codeDupCnt; k++) {
-        if (caseId == UdivFAdd) {
+        if (caseId == UdivVFAdd) {
             for (int j = 0; j < delayCnt; j++) {
                 inst[i++] = 0x9ac10820; // udiv x0, x1, x1
             }
@@ -75,6 +80,7 @@ void delay_test(DelayTestCase caseId, unsigned char *instBuf, int testCnt, int d
         for (int j = 0; j < testCnt; j++) {
             switch (caseId) {
             case SqrtNop:
+            case SqrtNopIAdd:
                 inst[i++] = 0xd503201f; // nop
                 break;
             case SqrtMov:
@@ -89,7 +95,8 @@ void delay_test(DelayTestCase caseId, unsigned char *instBuf, int testCnt, int d
             case SqrtIAdd:
                 inst[i++] = 0x8b010020; // add x0, x1, x1
                 break;
-            case UdivFAdd:
+            case UdivVFAdd:
+            case SqrtVFAddIAdd:
                 inst[i++] = 0x1e222841; // fadd s1, s2, s2
                 break;
             case SqrtCmp:
@@ -125,6 +132,11 @@ void delay_test(DelayTestCase caseId, unsigned char *instBuf, int testCnt, int d
                 return;
             }
         }
+
+        if (caseId == SqrtNopIAdd || caseId == SqrtVFAddIAdd) {
+            for (int j = 0; j < PhyIntFullSize; j++)
+                inst[i++] = 0x8b010020; // add x0, x1, x1
+        }
     }
 
     // ret 0xd65f03c0
@@ -141,7 +153,7 @@ void delay_test(DelayTestCase caseId, unsigned char *instBuf, int testCnt, int d
     static unsigned char addByte0[] = {0x48, 0x48, 0x48, 0x49, 0x49, 0x49, 0x49};
     static unsigned char addByte2[] = {0xd8, 0xd9, 0xda, 0xd8, 0xd9, 0xda, 0xdb};
     for (int k = 0; k < codeDupCnt; k++) {
-        if (caseId == UdivFAdd) {
+        if (caseId == UdivVFAdd) {
             for (int j = 0; j < delayCnt; j++) {
                 instBuf[i++] = 0x48; // xor    rdx,rdx
                 instBuf[i++] = 0x31;
@@ -169,6 +181,7 @@ void delay_test(DelayTestCase caseId, unsigned char *instBuf, int testCnt, int d
         for (int j = 0; j < testCnt; j++) {
             switch (caseId) {
             case SqrtNop:
+            case SqrtNopIAdd:
                 instBuf[i++] = 0x48; // nop
                 instBuf[i++] = 0x89;
                 instBuf[i++] = 0xc8;
@@ -194,11 +207,11 @@ void delay_test(DelayTestCase caseId, unsigned char *instBuf, int testCnt, int d
                 instBuf[i++] = 0x01;
                 instBuf[i++] = addByte2[j % 7];
                 break;
-            case UdivFAdd:
-                instBuf[i++] = 0xf3; // addss xmm[0-5], xmm6
-                instBuf[i++] = 0x0f;
-                instBuf[i++] = 0x58;
-                instBuf[i++] = 0xc6 + (j % 6) * 8;
+            case UdivVFAdd:
+                instBuf[i++] = 0xc5; // VPADDD xmm0, xmm1, xmm1
+                instBuf[i++] = 0xf1;
+                instBuf[i++] = 0xfe;
+                instBuf[i++] = 0xc1;
                 break;
             case SqrtCmp:
                 instBuf[i++] = 0x48; // cmp rax, rcx
@@ -249,8 +262,22 @@ void delay_test(DelayTestCase caseId, unsigned char *instBuf, int testCnt, int d
                 instBuf[i++] = 0xeb; // jmp 0
                 instBuf[i++] = 0x00;
                 break;
+            case SqrtVFAddIAdd:
+                instBuf[i++] = 0xc5; // VPADDD xmm2, xmm1, xmm1
+                instBuf[i++] = 0xf1;
+                instBuf[i++] = 0xfe;
+                instBuf[i++] = 0xd1;
+                break;
             default:
                 return;
+            }
+        }
+
+        if (caseId == SqrtNopIAdd || caseId == SqrtVFAddIAdd) {
+            for (int j = 0; j < PhyIntFullSize; j++) {
+                instBuf[i++] = addByte0[j % 7]; // add [rax-r11], rbx
+                instBuf[i++] = 0x01;
+                instBuf[i++] = addByte2[j % 7];
             }
         }
     }
