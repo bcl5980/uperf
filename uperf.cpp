@@ -221,13 +221,10 @@ void delay_test(DelayTestCase caseId, unsigned char *instBuf, int testCnt, int d
                 instBuf[i++] = 0xc9;
                 break;
             case SqrtIAdd:
-                // x86 only andn is not two address instruction
-                // so use andn to replace with add to avoid dependency
-                instBuf[i++] = 0xc4; // andn rax,rbx,rcx
-                instBuf[i++] = 0xe2;
-                instBuf[i++] = 0xe0;
-                instBuf[i++] = 0xf2;
-                instBuf[i++] = 0xc1;
+                instBuf[i++] = 0x48; // lea rax,[rbx+rcx]
+                instBuf[i++] = 0x8d;
+                instBuf[i++] = 0x04;
+                instBuf[i++] = 0x0b;
                 break;
             case UdivVFAdd:
                 instBuf[i++] = 0xc5; // VPADDD xmm0, xmm1, xmm1
@@ -241,21 +238,19 @@ void delay_test(DelayTestCase caseId, unsigned char *instBuf, int testCnt, int d
                 instBuf[i++] = 0xC8;
                 break;
             case SqrtIAddICmp:
-                instBuf[i++] = 0xc4; // andn rax,rbx,rcx
-                instBuf[i++] = 0xe2;
-                instBuf[i++] = 0xe0;
-                instBuf[i++] = 0xf2;
-                instBuf[i++] = 0xc1;
+                instBuf[i++] = 0x48; // lea rax,[rbx+rcx]
+                instBuf[i++] = 0x8d;
+                instBuf[i++] = 0x04;
+                instBuf[i++] = 0x0b;
                 instBuf[i++] = 0x4c; // cmp rdx, r8
                 instBuf[i++] = 0x39;
                 instBuf[i++] = 0xC2;
                 break;
             case SqrtIFAdd:
-                instBuf[i++] = 0xc4; // andn rax,rbx,rcx
-                instBuf[i++] = 0xe2;
-                instBuf[i++] = 0xe0;
-                instBuf[i++] = 0xf2;
-                instBuf[i++] = 0xc1;
+                instBuf[i++] = 0x48; // lea rax,[rbx+rcx]
+                instBuf[i++] = 0x8d;
+                instBuf[i++] = 0x04;
+                instBuf[i++] = 0x0b;
                 instBuf[i++] = 0xf3; // addss xmm[1-5], xmm6
                 instBuf[i++] = 0x0f;
                 instBuf[i++] = 0x58;
@@ -300,11 +295,10 @@ void delay_test(DelayTestCase caseId, unsigned char *instBuf, int testCnt, int d
 
         if (caseId == SqrtNopIAdd || caseId == SqrtVFAddIAdd) {
             for (int j = 0; j < PhyIntFullSize; j++) {
-                instBuf[i++] = 0xc4; // andn rax,rbx,rcx
-                instBuf[i++] = 0xe2;
-                instBuf[i++] = 0xe0;
-                instBuf[i++] = 0xf2;
-                instBuf[i++] = 0xc1;
+                instBuf[i++] = 0x48; // lea rax,[rbx+rcx]
+                instBuf[i++] = 0x8d;
+                instBuf[i++] = 0x04;
+                instBuf[i++] = 0x0b;
             }
         }
     }
