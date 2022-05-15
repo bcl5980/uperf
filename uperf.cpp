@@ -39,8 +39,24 @@ const char *TestCaseName[TestCaseEnd] = {
     "Sqrt Delay + IAdd&V/FAdd", "Sqrt Delay + Load",       "Sqrt Delay + Store",      "Sqrt Delay + ConditionJump",
     "Sqrt Delay + Jump",        "Sqrt Delay + Jump&CJump", "Sqrt Delay + Nop + IAdd", "Sqrt Delay + V/FAdd + IAdd"};
 
-// TODO: add into param
-const static int PhyIntFullSize = 120;
+const char *TestCaseGP[TestCaseEnd] = {
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "Int physical register size",
+    "Int physical register size",
+};
 
 void fillnop(unsigned char *instBuf, unsigned sizeBytes) {
 #ifdef __aarch64__
@@ -54,7 +70,7 @@ void fillnop(unsigned char *instBuf, unsigned sizeBytes) {
 }
 
 void delay_test(DelayTestCase caseId, unsigned char *instBuf, int testCnt, int delayCnt, int codeDupCnt,
-                int codeLoopCnt, size_t *data0, size_t *data1) {
+                int codeLoopCnt, size_t *data0, size_t *data1, int gp) {
     int i = 0;
 
 #if defined(__aarch64__) || defined(_M_ARM64)
@@ -142,7 +158,7 @@ void delay_test(DelayTestCase caseId, unsigned char *instBuf, int testCnt, int d
         }
 
         if (caseId == SqrtNopIAdd || caseId == SqrtVFAddIAdd) {
-            for (int j = 0; j < PhyIntFullSize; j++)
+            for (int j = 0; j < gp; j++)
                 inst[i++] = 0x8b010020; // add x0, x1, x1
         }
     }
@@ -294,7 +310,7 @@ void delay_test(DelayTestCase caseId, unsigned char *instBuf, int testCnt, int d
         }
 
         if (caseId == SqrtNopIAdd || caseId == SqrtVFAddIAdd) {
-            for (int j = 0; j < PhyIntFullSize; j++) {
+            for (int j = 0; j < gp; j++) {
                 instBuf[i++] = 0x48; // lea rax,[rbx+rcx]
                 instBuf[i++] = 0x8d;
                 instBuf[i++] = 0x04;
@@ -314,7 +330,7 @@ void delay_test(DelayTestCase caseId, unsigned char *instBuf, int testCnt, int d
     // warm icache
     ((size_t(*)(size_t, size_t, size_t *, size_t *))instBuf)(r0, r1, r2, r3);
 
-    size_t min = -1ull;
+    size_t min = ULLONG_MAX;
     for (int k = 0; k < 10; k++) {
         size_t start = getclock();
         for (int i = 0; i < codeLoopCnt; i++) {
@@ -336,6 +352,7 @@ int main(int argc, char *argv[]) {
     int delayCnt = 20;
     int codeDupCnt = 1;
     int codeLoopCnt = 1000;
+    int gp = 160;
     DelayTestCase caseId = SqrtNop;
 
     for (int i = 1; i < argc; i += 2) {
@@ -353,21 +370,31 @@ int main(int argc, char *argv[]) {
             codeDupCnt = atoi(argv[i + 1]);
         else if (strcmp(argv[i], "-loop") == 0)
             codeLoopCnt = atoi(argv[i + 1]);
+        else if (strcmp(argv[i], "-gp") == 0)
+            gp = atoi(argv[i + 1]);
         else {
-            printf("uperf -case  0\n"
+            printf("caseId, case Name, case Parameter\n");
+            for (int i = 0; i < TestCaseEnd; i++) {
+                printf("%d, %s, %s\n", i, TestCaseName[i], TestCaseGP[i]);
+            }
+
+            printf("Example:\n"
+                   "uperf -case  0\n"
                    "      -start 100\n"
                    "      -end   1000\n"
                    "      -step  10\n"
                    "      -delay 8\n"
                    "      -dup   1\n"
-                   "      -loop  1000\n");
+                   "      -loop  1000\n"
+                   "      -gp    160");
             return 0;
         }
     }
 
     if (caseId < 0 || caseId >= TestCaseEnd) {
+        printf("caseId, case Name, case Parameter\n");
         for (int i = 0; i < TestCaseEnd; i++) {
-            printf("%d %s\n", i, TestCaseName[i]);
+            printf("%d, %s, %s\n", i, TestCaseName[i], TestCaseGP[i]);
         }
         return 0;
     }
@@ -393,7 +420,7 @@ int main(int argc, char *argv[]) {
 
     for (int testCnt = testBase; testCnt < testEnd; testCnt += testStep) {
         printf("%d ", testCnt);
-        delay_test(caseId, instBuf, testCnt, delayCnt, codeDupCnt, codeLoopCnt, data0, data1);
+        delay_test(caseId, instBuf, testCnt, delayCnt, codeDupCnt, codeLoopCnt, data0, data1, gp);
         printf("\n");
     }
     VirtualFree(code, 0x1001000, MEM_RELEASE);
