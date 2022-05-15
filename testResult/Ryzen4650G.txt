@@ -1,7 +1,7 @@
 OOO Window:  220
 Int Physical Regs: 132
 Float Physical Regs: 130
-Cmp Flag Reg Looks share with Int Physical Regs
+Status Reg Looks share with Int Physical Regs
 Load Buffer ? todo
 Store Buffer: 48
 Condition Jump: 32

@@ -1,7 +1,7 @@
 OOO Window: 120
 Int Physical Regs: 88
 Physical Regs: 96
-Cmp: 36
+Status Regs: 36
 Load Buffer: 50
 Store Buffer: 60
 Condition Jump: 14
