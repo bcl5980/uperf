@@ -40,7 +40,7 @@ const char *TestCaseName[TestCaseEnd] = {
     "Sqrt Delay + Jump",        "Sqrt Delay + Jump&CJump", "Sqrt Delay + Nop + IAdd", "Sqrt Delay + V/FAdd + IAdd"};
 
 // TODO: add into param
-const static int PhyIntFullSize = 160;
+const static int PhyIntFullSize = 120;
 
 void fillnop(unsigned char *instBuf, unsigned sizeBytes) {
 #ifdef __aarch64__
@@ -73,9 +73,19 @@ void delay_test(DelayTestCase caseId, unsigned char *instBuf, int testCnt, int d
                 inst[i++] = 0x1e61c000; // sqrt d0, d0
             }
         }
-        // cmp x0, x0
-        if (caseId == SqrtCJmp || caseId == SqrtMixJmp)
+
+        switch (caseId) {
+        case SqrtCJmp:
+        case SqrtMixJmp:
+            // cmp x0, x0
             inst[i++] = 0xeb00001f;
+            break;
+        case SqrtLoad:
+        case SqrtStore:
+            // fmov x1, d0
+            inst[i++] = 0x9e660000;
+            break;
+        }
 
         for (int j = 0; j < testCnt; j++) {
             switch (caseId) {
@@ -111,12 +121,10 @@ void delay_test(DelayTestCase caseId, unsigned char *instBuf, int testCnt, int d
                 inst[i++] = 0x1e222841; // fadd s1, s2, s2
                 break;
             case SqrtLoad:
-                inst[i++] = 0xf9400042; // ldr x2, [x2]
+                inst[i++] = 0xf8616842; // ldr x2, [x2, x1]
                 break;
             case SqrtStore:
-                // it looks A76 have some optimization here, we must change the reg or address
-                inst[i++] = 0xf9000040; // str x0, [x2]
-                inst[i++] = 0x91002042; // add x2, x2, 8
+                inst[i++] = 0xf8216840; // str x0, [x2, x1]
                 break;
             case SqrtCJmp:
                 inst[i++] = 0x54000020; // b.eq .+4
@@ -171,11 +179,23 @@ void delay_test(DelayTestCase caseId, unsigned char *instBuf, int testCnt, int d
             }
         }
 
-        if (caseId == SqrtCJmp) {
+        switch (caseId) {
+        case SqrtCJmp:
+        case SqrtMixJmp:
             // test rcx, rcx
             instBuf[i++] = 0x48;
             instBuf[i++] = 0x85;
             instBuf[i++] = 0xC9;
+            break;
+        case SqrtLoad:
+        case SqrtStore:
+            // cvttsd2si rcx,xmm0
+            instBuf[i++] = 0xf2;
+            instBuf[i++] = 0x48;
+            instBuf[i++] = 0x0f;
+            instBuf[i++] = 0x2c;
+            instBuf[i++] = 0xc8;
+            break;
         }
 
         for (int j = 0; j < testCnt; j++) {
@@ -236,17 +256,16 @@ void delay_test(DelayTestCase caseId, unsigned char *instBuf, int testCnt, int d
                 instBuf[i++] = 0xce + (j % 5) * 8;
                 break;
             case SqrtLoad:
-                instBuf[i++] = 0x4d; // mov r8, QWORD PTR [r8]
+                instBuf[i++] = 0x49; // mov rax, QWORD PTR [r8+rcx]
                 instBuf[i++] = 0x8b;
-                instBuf[i++] = 0x00;
+                instBuf[i++] = 0x04;
+                instBuf[i++] = 0x08;
                 break;
             case SqrtStore:
-                instBuf[i++] = 0x49; // mov QWORD PTR [r8], rax
+                instBuf[i++] = 0x49; // mov QWORD PTR [r8+rcx], rax
                 instBuf[i++] = 0x89;
-                instBuf[i++] = 0x00;
-                instBuf[i++] = 0x48; // inc rax
-                instBuf[i++] = 0xff;
-                instBuf[i++] = 0xc0;
+                instBuf[i++] = 0x04;
+                instBuf[i++] = 0x08;
                 break;
             case SqrtCJmp:
                 instBuf[i++] = 0x75; // jnz 0
