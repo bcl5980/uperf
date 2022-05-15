@@ -267,10 +267,10 @@ void delay_test(DelayTestCase caseId, unsigned char *instBuf, int testCnt, int d
                 instBuf[i++] = 0x8d;
                 instBuf[i++] = 0x04;
                 instBuf[i++] = 0x0b;
-                instBuf[i++] = 0xf3; // addss xmm[1-5], xmm6
-                instBuf[i++] = 0x0f;
-                instBuf[i++] = 0x58;
-                instBuf[i++] = 0xce + (j % 5) * 8;
+                instBuf[i++] = 0xc5; // VPADDD xmm0, xmm1, xmm1
+                instBuf[i++] = 0xf1;
+                instBuf[i++] = 0xfe;
+                instBuf[i++] = 0xc1;
                 break;
             case SqrtLoad:
                 instBuf[i++] = 0x49; // mov rax, QWORD PTR [r8+rcx]
