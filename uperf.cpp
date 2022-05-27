@@ -14,32 +14,35 @@
 // https://defuse.ca/online-x86-assembler.htm
 
 enum DelayTestCase {
-    SqrtNop,       // ROB Size
-    SqrtMov,       // Check Zero Move feature
-    SqrtMovSelf,   // Check Move Self Opt & Physical Reg Size
-    SqrtMovSelfFp, // Float version Check Move Self Opt & Physical Reg Size
-    SqrtIAdd,      // Int Physical Reg Size
-    UdivVFAdd,     // Float Physical Reg Size
-    SqrtCmp,       // Status Physical Reg Size
-    SqrtIAddICmp,  // Check if the Status and Int Physical Reg is shared or not
-    SqrtIFAdd,     // Check if the Float and Int Physical Reg is shared or not
-    SqrtLoad,      // Load Buffer Size
-    SqrtStore,     // Store Buffer Size
-    SqrtCJmp,      // Condition Jump
-    SqrtJmp,       // Jump
-    SqrtMixJmp,    // Check if Jump and Condition Jump share or not
-    SqrtNopIAdd,   // Test ROB NOP retire speed, rob clear nop speed
-    SqrtVFAddIAdd, // Test ROB register retire speed
+    SqrtNop,              // ROB Size
+    SqrtMov,              // Check Zero Move feature
+    SqrtMovSelf,          // Check Move Self Opt & Physical Reg Size
+    SqrtMovSelfFp,        // Float version Check Move Self Opt & Physical Reg Size
+    SqrtIAdd,             // Int Physical Reg Size
+    UdivVFAdd,            // Float Physical Reg Size
+    SqrtCmp,              // Status Physical Reg Size
+    SqrtIAddICmp,         // Check if the Status and Int Physical Reg is shared or not
+    SqrtIFAdd,            // Check if the Float and Int Physical Reg is shared or not
+    SqrtLoad,             // Load Buffer Size
+    SqrtStore,            // Store Buffer Size
+    SqrtStoreUnknownAddr, // Store Buffer Size Test 2
+    SqrtCJmp,             // Condition Jump
+    SqrtJmp,              // Jump
+    SqrtMixJmp,           // Check if Jump and Condition Jump share or not
+    SqrtNopIAdd,          // Test ROB NOP retire speed, rob clear nop speed
+    SqrtVFAddIAdd,        // Test ROB register retire speed
     TestCaseEnd,
 };
 
 const char *TestCaseName[TestCaseEnd] = {
-    "Sqrt Delay + Nop",         "Sqrt Delay + Mov",        "Sqrt Delay + Mov Self",   "Sqrt Delay + Mov Self(FP)",
-    "Sqrt Delay + IAdd",        "Udiv Delay + V/FAdd",     "Sqrt Delay + Cmp",        "Sqrt Delay + Add&Cmp",
-    "Sqrt Delay + IAdd&V/FAdd", "Sqrt Delay + Load",       "Sqrt Delay + Store",      "Sqrt Delay + ConditionJump",
-    "Sqrt Delay + Jump",        "Sqrt Delay + Jump&CJump", "Sqrt Delay + Nop + IAdd", "Sqrt Delay + V/FAdd + IAdd"};
+    "Sqrt Delay + Nop",           "Sqrt Delay + Mov",    "Sqrt Delay + Mov Self",   "Sqrt Delay + Mov Self(FP)",
+    "Sqrt Delay + IAdd",          "Udiv Delay + V/FAdd", "Sqrt Delay + Cmp",        "Sqrt Delay + Add&Cmp",
+    "Sqrt Delay + IAdd&V/FAdd",   "Sqrt Delay + Load",   "Sqrt Delay + Store",      "Sqrt Delay + Store2",
+    "Sqrt Delay + ConditionJump", "Sqrt Delay + Jump",   "Sqrt Delay + Jump&CJump", "Sqrt Delay + Nop + IAdd",
+    "Sqrt Delay + V/FAdd + IAdd"};
 
 const char *TestCaseGP[TestCaseEnd] = {
+    "None",
     "None",
     "None",
     "None",
@@ -97,7 +100,7 @@ void delay_test(DelayTestCase caseId, unsigned char *instBuf, int testCnt, int d
             inst[i++] = 0xeb00001f;
             break;
         case SqrtLoad:
-        case SqrtStore:
+        case SqrtStoreUnknownAddr:
             // fmov x1, d0
             inst[i++] = 0x9e660000;
             break;
@@ -140,6 +143,11 @@ void delay_test(DelayTestCase caseId, unsigned char *instBuf, int testCnt, int d
                 inst[i++] = 0xf8616842; // ldr x2, [x2, x1]
                 break;
             case SqrtStore:
+                // it looks A76 have some optimization here, we must change the reg or address
+                inst[i++] = 0xf9000040; // str x0, [x2]
+                inst[i++] = 0x91002042; // add x2, x2, 8
+                break;
+            case SqrtStoreUnknownAddr:
                 inst[i++] = 0xf8216840; // str x0, [x2, x1]
                 break;
             case SqrtCJmp:
@@ -202,7 +210,7 @@ void delay_test(DelayTestCase caseId, unsigned char *instBuf, int testCnt, int d
             instBuf[i++] = 0xC9;
             break;
         case SqrtLoad:
-        case SqrtStore:
+        case SqrtStoreUnknownAddr:
             // cvttsd2si rcx,xmm0
             instBuf[i++] = 0xf2;
             instBuf[i++] = 0x48;
@@ -279,6 +287,11 @@ void delay_test(DelayTestCase caseId, unsigned char *instBuf, int testCnt, int d
                 instBuf[i++] = 0x08;
                 break;
             case SqrtStore:
+                instBuf[i++] = 0x49; // mov QWORD PTR [r8], rax
+                instBuf[i++] = 0x89;
+                instBuf[i++] = 0x00;
+                break;
+            case SqrtStoreUnknownAddr:
                 instBuf[i++] = 0x49; // mov QWORD PTR [r8+rcx], rax
                 instBuf[i++] = 0x89;
                 instBuf[i++] = 0x04;
@@ -411,7 +424,7 @@ int main(int argc, char *argv[]) {
 
     size_t *data0 = nullptr;
     size_t *data1 = nullptr;
-    if (caseId == SqrtLoad || caseId == SqrtStore) {
+    if (caseId == SqrtLoad || caseId == SqrtStore || caseId == SqrtStoreUnknownAddr) {
         data0 = new size_t[0x1000000];
         data1 = new size_t[0x1000000];
         data0[0] = (size_t)data0;
