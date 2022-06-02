@@ -102,7 +102,7 @@ void delay_test(DelayTestCase caseId, unsigned char *instBuf, int testCnt, int d
         case SqrtLoad:
         case SqrtStoreUnknownAddr:
             // fmov x1, d0
-            inst[i++] = 0x9e660000;
+            inst[i++] = 0x9e660001;
             break;
         }
 
