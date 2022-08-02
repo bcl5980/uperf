@@ -1,9 +1,8 @@
-#include <intrin.h>
 #include <math.h>
 #include <stdio.h>
-#include <windows.h>
+#include <string.h>
 
-#include "clock.h"
+#include "osutils.h"
 
 // Oline compiler
 // https://godbolt.org/
@@ -30,6 +29,7 @@ const char *TestCaseName[TestCaseEnd] = {"Nop",       "Mov", "IAdd", "IAddChain"
                                          "FAddChain", "Cmp", "Lea3", "Lea3Chain"};
 
 void fillnop(unsigned char *instBuf, unsigned sizeBytes) {
+    genCodeStart();
 #ifdef __aarch64__
     unsigned nopCnt = sizeBytes / 4;
     unsigned *inst = (unsigned *)instBuf;
@@ -38,6 +38,7 @@ void fillnop(unsigned char *instBuf, unsigned sizeBytes) {
 #else
     memset(instBuf, 0x90, sizeBytes);
 #endif
+    genCodeEnd(instBuf, sizeBytes);
 }
 
 void InstTest(InstTestCase caseId, unsigned char *instBuf, int testCnt, int codeDupCnt, int codeLoopCnt) {
@@ -84,8 +85,7 @@ void InstTest(InstTestCase caseId, unsigned char *instBuf, int testCnt, int code
     // ret 0xd65f03c0
     inst[i++] = 0xd65f03c0;
 
-    __dmb(_ARM64_BARRIER_SY); // data memory barrier
-    __isb(_ARM64_BARRIER_SY); // instruction barrier
+    genCodeEnd(inst, i * sizeof(int));
 #else
     // Microsft X64 calling convention:
     // RAX, RCX, RDX, R8, R9, R10, R11, and XMM0-XMM5 volatile, we can write them without saving
@@ -164,7 +164,7 @@ void InstTest(InstTestCase caseId, unsigned char *instBuf, int testCnt, int code
     // warm icache
     ((size_t(*)(size_t, size_t, size_t *, size_t *))instBuf)(r0, r1, r2, r3);
 
-    size_t min = ULLONG_MAX;
+    size_t min = -1ull;
     for (int k = 0; k < 10; k++) {
         size_t start = getclock();
         for (int i = 0; i < codeLoopCnt; i++) {
@@ -225,11 +225,9 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    SetProcessAffinityMask(GetCurrentProcess(), 0x10);
-    SetProcessPriorityBoost(GetCurrentProcess(), true);
-    SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
-    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
-    unsigned char *code = (unsigned char *)VirtualAlloc(0, 0x1001000, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+    if (!procInit(0x01))
+        return 1;
+    unsigned char *code = allocVM(0x1001000);
     unsigned char *instBuf = (unsigned char *)((size_t)(code + 0xfff) & (~0xfff));
     fillnop(instBuf, 0x1000000);
 
@@ -238,6 +236,6 @@ int main(int argc, char *argv[]) {
         InstTest(caseId, instBuf, testCnt, codeDupCnt, codeLoopCnt);
         printf("\n");
     }
-    VirtualFree(code, 0x1001000, MEM_RELEASE);
+    freeVM(code, 0x1001000);
     return 0;
 }

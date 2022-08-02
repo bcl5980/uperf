@@ -1,9 +1,8 @@
-#include <intrin.h>
 #include <math.h>
 #include <stdio.h>
-#include <windows.h>
+#include <string.h>
 
-#include "clock.h"
+#include "osutils.h"
 
 // Oline compiler
 // https://godbolt.org/
@@ -62,6 +61,7 @@ const char *TestCaseGP[TestCaseEnd] = {
 };
 
 void fillnop(unsigned char *instBuf, unsigned sizeBytes) {
+    genCodeStart();
 #ifdef __aarch64__
     unsigned nopCnt = sizeBytes / 4;
     unsigned *inst = (unsigned *)instBuf;
@@ -70,6 +70,7 @@ void fillnop(unsigned char *instBuf, unsigned sizeBytes) {
 #else
     memset(instBuf, 0x90, sizeBytes);
 #endif
+    genCodeEnd(instBuf, sizeBytes);
 }
 
 void delay_test(DelayTestCase caseId, unsigned char *instBuf, int testCnt, int delayCnt, int codeDupCnt,
@@ -77,13 +78,15 @@ void delay_test(DelayTestCase caseId, unsigned char *instBuf, int testCnt, int d
     int i = 0;
 
 #if defined(__aarch64__) || defined(_M_ARM64)
+    genCodeStart();
+
     // Microsft AARCH64 calling convention:
     // X0-X17, v0-v7, v16-v31 volatile, we can use them
     // X18-X30, v8-v15 nonvolatile, we can't use them
     // https://docs.microsoft.com/en-us/cpp/build/arm64-windows-abi-conventions?view=msvc-170
     unsigned int *inst = (unsigned int *)instBuf;
     for (int k = 0; k < codeDupCnt; k++) {
-        if (caseId == UdivVFAdd) {
+        if (caseId == UdivVFAdd || caseId == SqrtMovSelfFp) {
             for (int j = 0; j < delayCnt; j++) {
                 inst[i++] = 0x9ac10820; // udiv x0, x1, x1
             }
@@ -101,8 +104,10 @@ void delay_test(DelayTestCase caseId, unsigned char *instBuf, int testCnt, int d
             break;
         case SqrtLoad:
         case SqrtStoreUnknownAddr:
-            // fmov x1, d0
-            inst[i++] = 0x9e660001;
+            // fcvtzu x1, d0
+            inst[i++] = 0x9e790001;
+            break;
+        default:
             break;
         }
 
@@ -174,8 +179,7 @@ void delay_test(DelayTestCase caseId, unsigned char *instBuf, int testCnt, int d
     // ret 0xd65f03c0
     inst[i++] = 0xd65f03c0;
 
-    __dmb(_ARM64_BARRIER_SY); // data memory barrier
-    __isb(_ARM64_BARRIER_SY); // instruction barrier
+    genCodeEnd(inst, i * sizeof(int));
 #else
     // Microsft X64 calling convention:
     // RAX, RCX, RDX, R8, R9, R10, R11, and XMM0-XMM5 volatile, we can write them without saving
@@ -335,15 +339,15 @@ void delay_test(DelayTestCase caseId, unsigned char *instBuf, int testCnt, int d
     instBuf[i++] = 0xc3;
 #endif
 
-    size_t r0 = 1;
-    size_t r1 = 1;
+    size_t r0 = 0;
+    size_t r1 = 0;
     size_t *r2 = data0;
     size_t *r3 = data1;
     // __debugbreak();
     // warm icache
     ((size_t(*)(size_t, size_t, size_t *, size_t *))instBuf)(r0, r1, r2, r3);
 
-    size_t min = ULLONG_MAX;
+    size_t min = -1ull;
     for (int k = 0; k < 10; k++) {
         size_t start = getclock();
         for (int i = 0; i < codeLoopCnt; i++) {
@@ -366,7 +370,7 @@ int main(int argc, char *argv[]) {
     int codeDupCnt = 1;
     int codeLoopCnt = 1000;
     int gp = 160;
-    DelayTestCase caseId = SqrtNop;
+    DelayTestCase caseId = SqrtLoad;
 
     for (int i = 1; i < argc; i += 2) {
         if (strcmp(argv[i], "-case") == 0)
@@ -412,13 +416,12 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
+    if (!procInit(0x01))
+        return 1;
+
     printf("case: %s\ndelayCnt:%d codeDupCnt:%d, codeLoopCnt:%d\n", TestCaseName[caseId], delayCnt, codeDupCnt,
            codeLoopCnt);
-    SetProcessAffinityMask(GetCurrentProcess(), 0x10);
-    SetProcessPriorityBoost(GetCurrentProcess(), true);
-    SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
-    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
-    unsigned char *code = (unsigned char *)VirtualAlloc(0, 0x1001000, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+    unsigned char *code = allocVM(0x1001000);
     unsigned char *instBuf = (unsigned char *)((size_t)(code + 0xfff) & (~0xfff));
     fillnop(instBuf, 0x1000000);
 
@@ -436,7 +439,7 @@ int main(int argc, char *argv[]) {
         delay_test(caseId, instBuf, testCnt, delayCnt, codeDupCnt, codeLoopCnt, data0, data1, gp);
         printf("\n");
     }
-    VirtualFree(code, 0x1001000, MEM_RELEASE);
+    freeVM(code, 0x1001000);
     if (data0)
         delete[] data0;
     if (data1)
