@@ -22,7 +22,7 @@ SqrtLoadUnKnownAddr          62
 SqrtStore                    288
 SqrtStoreSeq                 286
 SqrtStoreUnknownAddr         62
-SqrtStoreUnknownVal          288
+SqrtStoreUnknownVal          62
 SqrtCJmp                     76
 SqrtJmp                      76
 SqrtMixJmp                   38
