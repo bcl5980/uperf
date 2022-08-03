@@ -2,11 +2,13 @@
 #include <intrin.h>
 #include <windows.h>
 
-void genCodeStart() { pthread_jit_write_protect_np(0); }
+void genCodeStart() {}
 
 void genCodeEnd(void *Ptr, size_t Size) {
+#ifdef _M_ARM64
     __dmb(_ARM64_BARRIER_SY); // data memory barrier
     __isb(_ARM64_BARRIER_SY); // instruction barrier
+#endif
 }
 
 bool procInit(unsigned AffinityMask) {
@@ -17,7 +19,9 @@ bool procInit(unsigned AffinityMask) {
     return true;
 }
 
-unsigned char *allocVM(unsigned Size) { return VirtualAlloc(0, Size, MEM_COMMIT, PAGE_EXECUTE_READWRITE); }
+unsigned char *allocVM(unsigned Size) {
+    return (unsigned char *)VirtualAlloc(0, Size, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+}
 
 void freeVM(void *Ptr, unsigned Size) { VirtualFree(Ptr, Size, MEM_RELEASE); }
 
