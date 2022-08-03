@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
     int codeDupCnt = 1;
     int codeLoopCnt = 1000;
     int gp = 160;
-    TestCase caseId = SqrtLoad;
+    TestCase caseId = InstNop;
 
     for (int i = 1; i < argc; i += 2) {
         if (strcmp(argv[i], "-case") == 0)
@@ -110,7 +110,7 @@ int main(int argc, char *argv[]) {
 
     size_t *data0 = nullptr;
     size_t *data1 = nullptr;
-    if (caseId == SqrtLoad || caseId == SqrtStore || caseId == SqrtStoreUnknownAddr) {
+    if (caseId >= SqrtLoad && caseId <= SqrtStoreUnknownVal) {
         data0 = new size_t[0x1000000];
         data1 = new size_t[0x1000000];
         data0[0] = (size_t)data0;
