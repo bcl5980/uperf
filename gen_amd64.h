@@ -39,6 +39,7 @@ bool genPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
             break;
         case SqrtLoadUnKnownAddr:
         case SqrtStoreUnknownAddr:
+        case SqrtStoreUnknownVal:
             // cvttsd2si rcx,xmm0
             instBuf[i++] = 0xf2;
             instBuf[i++] = 0x48;
