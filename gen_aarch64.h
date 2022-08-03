@@ -64,6 +64,8 @@ static bool genContent(TestCase caseId, unsigned int *inst, int testCnt, int gp,
         case SqrtNopIAdd:
         case SchIAddNop:
         case SchIAddChainNop:
+        case SchFAddNop:
+        case SchFAddChainNop:
             inst[i++] = 0xd503201f; // nop
             break;
         case InstMov:

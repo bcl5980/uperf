@@ -7,9 +7,9 @@ InstFAddChain                1 / 3                           Float Add Latency
 InstCmp                      3                               Compare ALU Throughput
 InstLea3                     not support
 InstLea3Chain                not support
-SqrtNop                      2000~                           ROB Size
+SqrtNop                      2016~                           ROB Size
 SqrtMov                      580~                            ROB Size with register
-SqrtMovSelf                  2000~                           ROB Size, looks MovSelf opitmized to Nop
+SqrtMovSelf                  2016~                           ROB Size, looks MovSelf opitmized to Nop
 SqrtMovSelfFp                ?                               Can't Measure, maybe program issue
 SqrtIAdd                     344                             Int Physical Register Should +32 for x0-x31
 UdivVFAdd                    366                             Float/SIMD Register Should +32 for v0-v31
