@@ -1,30 +1,30 @@
-InstNop,                      8     
-InstMov,                      8
-InstIAdd,                     6
-InstIAddChain,                < 1 ?
-InstFAdd,                     4
-InstFAddChain,                1 / 3
-InstCmp,                      3
-InstLea3,                     not support
-InstLea3Chain,                not support
-SqrtNop,                      2000~
-SqrtMov,                      580~
-SqrtMovSelf,                  2000~
-SqrtMovSelfFp,                ?
-SqrtIAdd,                     344
-UdivVFAdd,                    366
-SqrtCmp,                      124
-SqrtIAddICmp,                 124
-SqrtIFAdd,                    290
-SqrtLoad,                     288
-SqrtLoadSeq,                  169
-SqrtLoadUnKnownAddr,          62
-SqrtStore,                    288
-SqrtStoreSeq,                 286
-SqrtStoreUnknownAddr,         62
-SqrtStoreUnknownVal,          288
-SqrtCJmp,                     76
-SqrtJmp,                      76
-SqrtMixJmp,                   38
-SqrtNopIAdd,                  56
-SqrtVFAddIAdd,                16
+InstNop                      8                               Renaming Throughput
+InstMov                      8                               Renaming Throughput
+InstIAdd                     6                               Simple Int ALU Throughput
+InstIAddChain                < 1 ?                           Add Latency
+InstFAdd                     4                               Simple Float ALU Throughput
+InstFAddChain                1 / 3                           Float Add Latency
+InstCmp                      3                               Compare ALU Throughput
+InstLea3                     not support
+InstLea3Chain                not support
+SqrtNop                      2000~                           ROB Size
+SqrtMov                      580~                            ROB Size with register
+SqrtMovSelf                  2000~                           ROB Size, looks MovSelf opitmized to Nop
+SqrtMovSelfFp                ?                               Can't Measure, maybe program issue
+SqrtIAdd                     344                             Int Physical Register Should +32 for x0-x31
+UdivVFAdd                    366                             Float/SIMD Register Should +32 for v0-v31
+SqrtCmp                      124                             Status Register
+SqrtIAddICmp                 124                             Make sure Status share with Int Physical Reg or not
+SqrtIFAdd                    290                             Make sure Float share with Int Physical Reg or not
+SqrtLoad                     288                             
+SqrtLoadSeq                  169
+SqrtLoadUnKnownAddr          62
+SqrtStore                    288
+SqrtStoreSeq                 286
+SqrtStoreUnknownAddr         62
+SqrtStoreUnknownVal          288
+SqrtCJmp                     76
+SqrtJmp                      76
+SqrtMixJmp                   38
+SqrtNopIAdd                  56                              Retire Speed for Nop
+SqrtVFAddIAdd                16                              Retire Speed for float add
