@@ -9,8 +9,6 @@
 
 #include <libkern/OSCacheControl.h>
 
-typedef int kpc_get_countingproc(void);
-static kpc_get_countingproc *kpc_get_counting;
 typedef int kpc_force_all_ctrs_setproc(int);
 static kpc_force_all_ctrs_setproc *kpc_force_all_ctrs_set;
 typedef int kpc_set_countingproc(uint32_t);
@@ -21,16 +19,10 @@ typedef int kpc_set_configproc(uint32_t, void *);
 static kpc_set_configproc *kpc_set_config;
 typedef int kpc_get_configproc(uint32_t, void *);
 static kpc_get_configproc *kpc_get_config;
-typedef int kpc_set_periodproc(uint32_t, void *);
-static kpc_set_periodproc *kpc_set_period;
-typedef int kpc_get_periodproc(uint32_t, void *);
-static kpc_get_periodproc *kpc_get_period;
 typedef uint32_t kpc_get_counter_countproc(uint32_t);
 static kpc_get_counter_countproc *kpc_get_counter_count;
 typedef uint32_t kpc_get_config_countproc(uint32_t);
 static kpc_get_config_countproc *kpc_get_config_count;
-typedef int kperf_sample_getproc(int *);
-static kperf_sample_getproc *kperf_sample_get;
 typedef int kpc_get_thread_countersproc(int, unsigned int, void *);
 static kpc_get_thread_countersproc *kpc_get_thread_counters;
 
@@ -85,11 +77,6 @@ bool procInit(unsigned AffinityMask) {
         printf("kperf = %p\n", kperf);
         return false;
     }
-    kpc_get_counting = (kpc_get_countingproc *)(dlsym(kperf, "kpc_get_counting"));
-    if (!kpc_get_counting) {
-        printf("%s = %p\n", "kpc_get_counting", (void *)kpc_get_counting);
-        return false;
-    }
     kpc_force_all_ctrs_set = (kpc_force_all_ctrs_setproc *)(dlsym(kperf, "kpc_force_all_ctrs_set"));
     if (!kpc_force_all_ctrs_set) {
         printf("%s = %p\n", "kpc_force_all_ctrs_set", (void *)kpc_force_all_ctrs_set);
@@ -115,16 +102,6 @@ bool procInit(unsigned AffinityMask) {
         printf("%s = %p\n", "kpc_get_config", (void *)kpc_get_config);
         return false;
     }
-    kpc_set_period = (kpc_set_periodproc *)(dlsym(kperf, "kpc_set_period"));
-    if (!kpc_set_period) {
-        printf("%s = %p\n", "kpc_set_period", (void *)kpc_set_period);
-        return false;
-    }
-    kpc_get_period = (kpc_get_periodproc *)(dlsym(kperf, "kpc_get_period"));
-    if (!kpc_get_period) {
-        printf("%s = %p\n", "kpc_get_period", (void *)kpc_get_period);
-        return false;
-    }
     kpc_get_counter_count = (kpc_get_counter_countproc *)(dlsym(kperf, "kpc_get_counter_count"));
     if (!kpc_get_counter_count) {
         printf("%s = %p\n", "kpc_get_counter_count", (void *)kpc_get_counter_count);
@@ -133,11 +110,6 @@ bool procInit(unsigned AffinityMask) {
     kpc_get_config_count = (kpc_get_config_countproc *)(dlsym(kperf, "kpc_get_config_count"));
     if (!kpc_get_config_count) {
         printf("%s = %p\n", "kpc_get_config_count", (void *)kpc_get_config_count);
-        return false;
-    }
-    kperf_sample_get = (kperf_sample_getproc *)(dlsym(kperf, "kperf_sample_get"));
-    if (!kperf_sample_get) {
-        printf("%s = %p\n", "kperf_sample_get", (void *)kperf_sample_get);
         return false;
     }
     kpc_get_thread_counters = (kpc_get_thread_countersproc *)(dlsym(kperf, "kpc_get_thread_counters"));
