@@ -79,7 +79,7 @@ const char *TestCaseName[TestCaseEnd] = {
     "Sqrt Delay + Nop + IAdd",
     "Sqrt Delay + V/FAdd + IAdd",
     "IAdd + Nop",
-    "IAddChain + Nop"
+    "IAddChain + Nop",
     "FAdd + Nop",
     "FAddChain + Nop",
     "Period IAdd + Nop",
