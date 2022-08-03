@@ -90,9 +90,9 @@ int main(int argc, char *argv[]) {
     }
 
     if (caseId < 0 || caseId >= TestCaseEnd) {
-        printf("caseId, case Name, case Parameter\n");
+        printf("caseId                          case Name    case Parameter\n");
         for (int i = 0; i < TestCaseEnd; i++) {
-            printf("%d, %s, %s\n", i, TestCaseName[i], TestCaseGP[i]);
+            printf("%2d, %36s,    %s\n", i, TestCaseName[i], TestCaseGP[i]);
         }
         return 0;
     }
@@ -100,6 +100,8 @@ int main(int argc, char *argv[]) {
     if (!procInit(0x01))
         return 1;
 
+    if (caseId < SqrtNop)
+        delayCnt = 0;
     printf("case: %s\ndelayCnt:%d codeDupCnt:%d, codeLoopCnt:%d\n", TestCaseName[caseId], delayCnt, codeDupCnt,
            codeLoopCnt);
     unsigned char *code = allocVM(0x1001000);
