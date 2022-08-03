@@ -84,7 +84,7 @@ int main(int argc, char *argv[]) {
                    "      -delay 8    :ignore when only measure inst throughput\n"
                    "      -dup   1    :unroll counter for the measure pattern\n"
                    "      -loop  1000 :loop counter for the measure pattern\n"
-                   "      -gp    160  :general paramater for some cases");
+                   "      -gp    160  :general paramater for some cases\n");
             return 0;
         }
     }
