@@ -1,0 +1,30 @@
+InstNop,                      8     
+InstMov,                      8
+InstIAdd,                     6
+InstIAddChain,                < 1 ?
+InstFAdd,                     4
+InstFAddChain,                1 / 3
+InstCmp,                      3
+InstLea3,                     not support
+InstLea3Chain,                not support
+SqrtNop,                      2000~
+SqrtMov,                      580~
+SqrtMovSelf,                  2000~
+SqrtMovSelfFp,                ?
+SqrtIAdd,                     344
+UdivVFAdd,                    366
+SqrtCmp,                      124
+SqrtIAddICmp,                 124
+SqrtIFAdd,                    290
+SqrtLoad,                     288
+SqrtLoadSeq,                  169
+SqrtLoadUnKnownAddr,          62
+SqrtStore,                    288
+SqrtStoreSeq,                 286
+SqrtStoreUnknownAddr,         62
+SqrtStoreUnknownVal,          288
+SqrtCJmp,                     76
+SqrtJmp,                      76
+SqrtMixJmp,                   38
+SqrtNopIAdd,                  56
+SqrtVFAddIAdd,                16
