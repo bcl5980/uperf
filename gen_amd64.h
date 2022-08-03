@@ -53,43 +53,16 @@ bool genPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
 
         for (int j = 0; j < testCnt; j++) {
             switch (caseId) {
-            case InstNop:
-                instBuf[i++] = 0x48; // nop
-                instBuf[i++] = 0x89;
-                instBuf[i++] = 0xc8;
-                break;
-            case InstMov:
-                instBuf[i++] = 0x48; // mov rax, rcx
-                instBuf[i++] = 0x89;
-                instBuf[i++] = 0xc8;
-                break;
-            case InstIAdd:
-                instBuf[i++] = 0x48; // lea rax,[rbx+rcx]
-                instBuf[i++] = 0x8d;
-                instBuf[i++] = 0x04;
-                instBuf[i++] = 0x0b;
-                break;
             case InstIAddChain:
                 instBuf[i++] = 0x48; // add rax, rcx
                 instBuf[i++] = 0x01;
                 instBuf[i++] = 0xc8;
-                break;
-            case InstFAdd:
-                instBuf[i++] = 0xc5; // VPADDD xmm0, xmm1, xmm1
-                instBuf[i++] = 0xf1;
-                instBuf[i++] = 0xfe;
-                instBuf[i++] = 0xc1;
                 break;
             case InstFAddChain:
                 instBuf[i++] = 0xc5; // VPADDD xmm0, xmm0, xmm1
                 instBuf[i++] = 0xf9;
                 instBuf[i++] = 0xfe;
                 instBuf[i++] = 0xc1;
-                break;
-            case InstCmp:
-                instBuf[i++] = 0x48; // cmp rax, rcx
-                instBuf[i++] = 0x39;
-                instBuf[i++] = 0xC8;
                 break;
             case InstLea3:
                 instBuf[i++] = 0x48; // lea rax, [rcx+8*rax+42]
@@ -105,12 +78,14 @@ bool genPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
                 instBuf[i++] = 0xc1;
                 instBuf[i++] = 0x2a;
                 break;
+            case InstNop:
             case SqrtNop:
             case SqrtNopIAdd:
                 instBuf[i++] = 0x48; // nop
                 instBuf[i++] = 0x89;
                 instBuf[i++] = 0xc8;
                 break;
+            case InstMov:
             case SqrtMov:
                 instBuf[i++] = 0x48; // mov rax, rcx
                 instBuf[i++] = 0x89;
@@ -127,18 +102,21 @@ bool genPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
                 instBuf[i++] = 0x7e;
                 instBuf[i++] = 0xc9;
                 break;
+            case InstIAdd:
             case SqrtIAdd:
                 instBuf[i++] = 0x48; // lea rax,[rbx+rcx]
                 instBuf[i++] = 0x8d;
                 instBuf[i++] = 0x04;
                 instBuf[i++] = 0x0b;
                 break;
+            case InstFAdd:
             case UdivVFAdd:
                 instBuf[i++] = 0xc5; // VPADDD xmm0, xmm1, xmm1
                 instBuf[i++] = 0xf1;
                 instBuf[i++] = 0xfe;
                 instBuf[i++] = 0xc1;
                 break;
+            case InstCmp:
             case SqrtCmp:
                 instBuf[i++] = 0x48; // cmp rax, rcx
                 instBuf[i++] = 0x39;

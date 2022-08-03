@@ -17,9 +17,28 @@ bool genPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
             for (int j = 0; j < delayCnt; j++) {
                 inst[i++] = 0x9ac10821; // udiv x1, x1, x1
             }
-        } else if (caseId >= SqrtNop) {
+        } else if (caseId >= SqrtNop && caseId < SchAddNop) {
             for (int j = 0; j < delayCnt; j++) {
                 inst[i++] = 0x1e61c000; // sqrt d0, d0
+            }
+        } else {
+            for (int j = 0; j < delayCnt; j++) {
+                switch (caseId) {
+                case SchAddNop:
+                    inst[i++] = 0x8b010020; // add x0, x1, x1
+                    break;
+                case SchAddChainNop:
+                    inst[i++] = 0x8b010000; // add x0, x0, x1
+                    break;
+                case SchFAddNop:
+                    inst[i++] = 0x1e222841; // fadd s1, s2, s2
+                    break;
+                case SchFAddChainNop:
+                    inst[i++] = 0x1e222821; // fadd s1, s1, s2
+                    break;
+                default:
+                    break;
+                }
             }
         }
 
@@ -41,31 +60,20 @@ bool genPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
 
         for (int j = 0; j < testCnt; j++) {
             switch (caseId) {
-            case InstNop:
-                inst[i++] = 0xd503201f; // nop
-                break;
-            case InstMov:
-                inst[i++] = 0xaa0103e0; // mov x0, x1
-                break;
-            case InstIAdd:
-                inst[i++] = 0x8b010020; // add x0, x1, x1
-                break;
             case InstIAddChain:
                 inst[i++] = 0x8b010000; // add x0, x0, x1
-                break;
-            case InstFAdd:
-                inst[i++] = 0x1e222841; // fadd s1, s2, s2
                 break;
             case InstFAddChain:
                 inst[i++] = 0x1e222821; // fadd s1, s1, s2
                 break;
-            case InstCmp:
-                inst[i++] = 0xeb01001f; // cmp x0, x1
-                break;
+            case InstNop:
             case SqrtNop:
             case SqrtNopIAdd:
+            case SchAddNop:
+            case SchAddChainNop:
                 inst[i++] = 0xd503201f; // nop
                 break;
+            case InstMov:
             case SqrtMov:
                 inst[i++] = 0xaa0103e0; // mov x0, x1
                 break;
@@ -75,13 +83,16 @@ bool genPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
             case SqrtMovSelfFp:
                 inst[i++] = 0x1e604021; // fmov d1, d1
                 break;
+            case InstIAdd:
             case SqrtIAdd:
                 inst[i++] = 0x8b010020; // add x0, x1, x1
                 break;
+            case InstFAdd:
             case UdivVFAdd:
             case SqrtVFAddIAdd:
                 inst[i++] = 0x1e222841; // fadd s1, s2, s2
                 break;
+            case InstCmp:
             case SqrtCmp:
                 inst[i++] = 0xeb01001f; // cmp x0, x1
                 break;

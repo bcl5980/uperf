@@ -33,6 +33,12 @@ enum TestCase {
     SqrtMixJmp,           // Check if Jump and Condition Jump share or not
     SqrtNopIAdd,          // Test ROB NOP retire speed, rob clear nop speed
     SqrtVFAddIAdd,        // Test ROB register retire speed
+
+    // @todo: add x86 support
+    SchAddNop,            // Schedule Queue for Int Test1
+    SchAddChainNop,       // Schedule Queue for Int Test2
+    SchFAddNop,           // Schedule Queue for Float Test1
+    SchFAddChainNop,      // Schedule Queue for Float Test2
     TestCaseEnd,
 };
 
@@ -65,7 +71,11 @@ const char *TestCaseName[TestCaseEnd] = {"Inst Nop",
                                          "Sqrt Delay + Jump",
                                          "Sqrt Delay + Jump&CJump",
                                          "Sqrt Delay + Nop + IAdd",
-                                         "Sqrt Delay + V/FAdd + IAdd"};
+                                         "Sqrt Delay + V/FAdd + IAdd",
+                                         "IAdd + Nop",
+                                         "IAddChain + Nop"
+                                         "FAdd + Nop",
+                                         "FAddChain + Nop",};
 
 const char *TestCaseGP[TestCaseEnd] = {
     "None",
@@ -98,6 +108,10 @@ const char *TestCaseGP[TestCaseEnd] = {
     "None",
     "Int physical register size",
     "Int physical register size",
+    "None",
+    "None",
+    "None",
+    "None",
 };
 
 #endif // __TESTCASE_H__
