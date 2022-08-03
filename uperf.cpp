@@ -17,7 +17,7 @@
 
 bool runPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayCnt, int codeDupCnt, int codeLoopCnt,
                 size_t *data0, size_t *data1, int gp) {
-    if (!genPattern(caseId, instBuf, testCnt, delayCnt, codeDupCnt, codeLoopCnt, gp))
+    if (!genPattern(caseId, instBuf, testCnt, delayCnt, codeDupCnt, gp))
         return false;
 
     size_t r0 = 0;

@@ -1,8 +1,7 @@
 #ifndef __GEN_AMD64_H__
 #define __GEN_AMD64_H__
 
-bool genPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayCnt, int codeDupCnt, int codeLoopCnt,
-                int gp) {
+bool genPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayCnt, int codeDupCnt, int gp) {
     int i = 0;
 
     // Microsft X64 calling convention:
