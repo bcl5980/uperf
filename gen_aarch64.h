@@ -6,17 +6,17 @@ static void genDelayPattern(TestCase caseId, unsigned int *inst, int delayCnt, u
         for (int j = 0; j < delayCnt; j++) {
             inst[i++] = 0x9ac10821; // udiv x1, x1, x1
         }
-    } else if (caseId >= SqrtNop && caseId < SchAddNop) {
+    } else if (caseId >= SqrtNop && caseId < SchIAddNop) {
         for (int j = 0; j < delayCnt; j++) {
             inst[i++] = 0x1e61c000; // sqrt d0, d0
         }
     } else {
         for (int j = 0; j < delayCnt; j++) {
             switch (caseId) {
-            case SchAddNop:
+            case SchIAddNop:
                 inst[i++] = 0x8b010020; // add x0, x1, x1
                 break;
-            case SchAddChainNop:
+            case SchIAddChainNop:
                 inst[i++] = 0x8b010000; // add x0, x0, x1
                 break;
             case SchFAddNop:
@@ -62,8 +62,8 @@ static bool genContent(TestCase caseId, unsigned int *inst, int testCnt, int gp,
         case InstNop:
         case SqrtNop:
         case SqrtNopIAdd:
-        case SchAddNop:
-        case SchAddChainNop:
+        case SchIAddNop:
+        case SchIAddChainNop:
             inst[i++] = 0xd503201f; // nop
             break;
         case InstMov:
@@ -142,21 +142,57 @@ static void genEpilogue(TestCase caseId, unsigned int *inst, int gp, unsigned &i
     }
 }
 
+static bool genPeriodPattern(TestCase caseId, unsigned int *inst, int period, int instNum, int instThroughPut,
+                             int nopThroughPut, unsigned &i) {
+    int InstCnt = instThroughPut * period;
+    int PeriodCnt = nopThroughPut * period;
+    for (int j = 0, k = 0; j < instNum; j++) {
+        if (k < InstCnt) {
+            switch (caseId) {
+            case PeriodIAddNop:
+                inst[i++] = 0x8b010020; // add x0, x1, x1
+                break;
+            case PeriodIAddChainNop:
+                inst[i++] = 0x8b010000; // add x0, x0, x1
+                break;
+            case PeriodFAddNop:
+                inst[i++] = 0x1e222841; // fadd s1, s2, s2
+                break;
+            case PeriodFAddChainNop:
+                inst[i++] = 0x1e222821; // fadd s1, s1, s2
+                break;
+            default:
+                return false;
+            }
+        } else {
+            inst[i++] = 0xd503201f; // nop
+        }
+        k++;
+        if (k >= PeriodCnt)
+            k = 0;
+    }
+    return true;
+}
+
 bool genPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayCnt, int codeDupCnt, int gp) {
     unsigned i = 0;
+    unsigned int *inst = (unsigned int *)instBuf;
     genCodeStart();
 
     // Microsft AARCH64 calling convention:
     // X0-X17, v0-v7, v16-v31 volatile, we can use them
     // X18-X30, v8-v15 nonvolatile, we can't use them
     // https://docs.microsoft.com/en-us/cpp/build/arm64-windows-abi-conventions?view=msvc-170
-    unsigned int *inst = (unsigned int *)instBuf;
-    for (int k = 0; k < codeDupCnt; k++) {
-        genDelayPattern(caseId, inst, delayCnt, i);
-        genPrologue(caseId, inst, i);
-        if (!genContent(caseId, inst, testCnt, gp, i))
-            return false;
-        genEpilogue(caseId, inst, gp, i);
+    if (caseId >= PeriodIAddNop) {
+        genPeriodPattern(caseId, inst, testCnt, delayCnt, codeDupCnt, gp, i);
+    } else {
+        for (int k = 0; k < codeDupCnt; k++) {
+            genDelayPattern(caseId, inst, delayCnt, i);
+            genPrologue(caseId, inst, i);
+            if (!genContent(caseId, inst, testCnt, gp, i))
+                return false;
+            genEpilogue(caseId, inst, gp, i);
+        }
     }
 
     // ret 0xd65f03c0

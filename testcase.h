@@ -35,47 +35,58 @@ enum TestCase {
     SqrtVFAddIAdd,        // Test ROB register retire speed
 
     // @todo: add x86 support
-    SchAddNop,            // Schedule Queue for Int Test1
-    SchAddChainNop,       // Schedule Queue for Int Test2
-    SchFAddNop,           // Schedule Queue for Float Test1
-    SchFAddChainNop,      // Schedule Queue for Float Test2
+    SchIAddNop,         // Schedule Queue for Int Test1
+    SchIAddChainNop,    // Schedule Queue for Int Test2
+    SchFAddNop,         // Schedule Queue for Float Test1
+    SchFAddChainNop,    // Schedule Queue for Float Test2
+
+    PeriodIAddNop,      // Schedule Queue for Int Test3
+    PeriodIAddChainNop, // Schedule Queue for Int Test4
+    PeriodFAddNop,      // Schedule Queue for Float Test3
+    PeriodFAddChainNop, // Schedule Queue for Float Test4
     TestCaseEnd,
 };
 
-const char *TestCaseName[TestCaseEnd] = {"Inst Nop",
-                                         "Inst Mov",
-                                         "Inst IAdd",
-                                         "Inst IAddChain",
-                                         "Inst FAdd",
-                                         "Inst FAddChain",
-                                         "Inst Cmp",
-                                         "Inst Lea3",
-                                         "Inst Lea3Chain",
-                                         "Sqrt Delay + Nop",
-                                         "Sqrt Delay + Mov",
-                                         "Sqrt Delay + Mov Self",
-                                         "Sqrt Delay + Mov Self(FP)",
-                                         "Sqrt Delay + IAdd",
-                                         "Udiv Delay + V/FAdd",
-                                         "Sqrt Delay + Cmp",
-                                         "Sqrt Delay + Add&Cmp",
-                                         "Sqrt Delay + IAdd&V/FAdd",
-                                         "Sqrt Delay + Load Same Addr",
-                                         "Sqrt Delay + Load Linear Addr",
-                                         "Sqrt Delay + Load Unknown Addr",
-                                         "Sqrt Delay + Store Same Addr",
-                                         "Sqrt Delay + Store Linear Addr",
-                                         "Sqrt Delay + Store Unknown Addr",
-                                         "Sqrt Delay + Store Unknown Value",
-                                         "Sqrt Delay + ConditionJump",
-                                         "Sqrt Delay + Jump",
-                                         "Sqrt Delay + Jump&CJump",
-                                         "Sqrt Delay + Nop + IAdd",
-                                         "Sqrt Delay + V/FAdd + IAdd",
-                                         "IAdd + Nop",
-                                         "IAddChain + Nop"
-                                         "FAdd + Nop",
-                                         "FAddChain + Nop",};
+const char *TestCaseName[TestCaseEnd] = {
+    "Inst Nop",
+    "Inst Mov",
+    "Inst IAdd",
+    "Inst IAddChain",
+    "Inst FAdd",
+    "Inst FAddChain",
+    "Inst Cmp",
+    "Inst Lea3",
+    "Inst Lea3Chain",
+    "Sqrt Delay + Nop",
+    "Sqrt Delay + Mov",
+    "Sqrt Delay + Mov Self",
+    "Sqrt Delay + Mov Self(FP)",
+    "Sqrt Delay + IAdd",
+    "Udiv Delay + V/FAdd",
+    "Sqrt Delay + Cmp",
+    "Sqrt Delay + Add&Cmp",
+    "Sqrt Delay + IAdd&V/FAdd",
+    "Sqrt Delay + Load Same Addr",
+    "Sqrt Delay + Load Linear Addr",
+    "Sqrt Delay + Load Unknown Addr",
+    "Sqrt Delay + Store Same Addr",
+    "Sqrt Delay + Store Linear Addr",
+    "Sqrt Delay + Store Unknown Addr",
+    "Sqrt Delay + Store Unknown Value",
+    "Sqrt Delay + ConditionJump",
+    "Sqrt Delay + Jump",
+    "Sqrt Delay + Jump&CJump",
+    "Sqrt Delay + Nop + IAdd",
+    "Sqrt Delay + V/FAdd + IAdd",
+    "IAdd + Nop",
+    "IAddChain + Nop"
+    "FAdd + Nop",
+    "FAddChain + Nop",
+    "Period IAdd + Nop",
+    "Period IAddChain + Nop",
+    "Period FAdd + Nop",
+    "Period FAddChain + Nop",
+};
 
 const char *TestCaseGP[TestCaseEnd] = {
     "None",
@@ -112,6 +123,10 @@ const char *TestCaseGP[TestCaseEnd] = {
     "None",
     "None",
     "None",
+    "Renaming Throughput",
+    "Renaming Throughput",
+    "Renaming Throughput",
+    "Renaming Throughput",
 };
 
 #endif // __TESTCASE_H__

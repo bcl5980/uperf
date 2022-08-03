@@ -40,7 +40,12 @@ bool runPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
             min = clock;
     }
 
-    printf("%.1f ", (double)min / (codeLoopCnt * codeDupCnt));
+    int codeExecCnt;
+    if (caseId >= PeriodIAddNop)
+        codeExecCnt = codeLoopCnt;
+    else
+        codeExecCnt = codeLoopCnt * codeDupCnt;
+    printf("%.1f ", (double)min / codeExecCnt);
     return true;
 }
 
