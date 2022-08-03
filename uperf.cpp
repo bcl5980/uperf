@@ -14,9 +14,10 @@
 
 #include "gen.h"
 
-void runPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayCnt, int codeDupCnt,
-                int codeLoopCnt, size_t *data0, size_t *data1, int gp) {
-    genPattern(caseId, instBuf, testCnt, delayCnt, codeDupCnt, codeLoopCnt, gp);
+bool runPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayCnt, int codeDupCnt, int codeLoopCnt,
+                size_t *data0, size_t *data1, int gp) {
+    if (!genPattern(caseId, instBuf, testCnt, delayCnt, codeDupCnt, codeLoopCnt, gp))
+        return false;
 
     size_t r0 = 0;
     size_t r1 = 0;
@@ -39,6 +40,7 @@ void runPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
     }
 
     printf("%.1f ", (double)min / (codeLoopCnt * codeDupCnt));
+    return true;
 }
 
 int main(int argc, char *argv[]) {
@@ -69,20 +71,20 @@ int main(int argc, char *argv[]) {
         else if (strcmp(argv[i], "-gp") == 0)
             gp = atoi(argv[i + 1]);
         else {
-            printf("caseId, case Name, case Parameter\n");
+            printf("caseId                          case Name    case Parameter\n");
             for (int i = 0; i < TestCaseEnd; i++) {
-                printf("%d, %s, %s\n", i, TestCaseName[i], TestCaseGP[i]);
+                printf("%2d, %36s,    %s\n", i, TestCaseName[i], TestCaseGP[i]);
             }
 
             printf("Example:\n"
-                   "uperf -case  0\n"
-                   "      -start 100\n"
-                   "      -end   1000\n"
-                   "      -step  10\n"
-                   "      -delay 8\n"
-                   "      -dup   1\n"
-                   "      -loop  1000\n"
-                   "      -gp    160");
+                   "uperf -case  0    \n"
+                   "      -start 100  \n"
+                   "      -end   1000 \n"
+                   "      -step  10   \n"
+                   "      -delay 8    :ignore when only measure inst throughput\n"
+                   "      -dup   1    :unroll counter for the measure pattern\n"
+                   "      -loop  1000 :loop counter for the measure pattern\n"
+                   "      -gp    160  :general paramater for some cases");
             return 0;
         }
     }
@@ -115,7 +117,10 @@ int main(int argc, char *argv[]) {
 
     for (int testCnt = testBase; testCnt < testEnd; testCnt += testStep) {
         printf("%d ", testCnt);
-        runPattern(caseId, instBuf, testCnt, delayCnt, codeDupCnt, codeLoopCnt, data0, data1, gp);
+        if (!runPattern(caseId, instBuf, testCnt, delayCnt, codeDupCnt, codeLoopCnt, data0, data1, gp)) {
+            printf("current test case is not support on the platform\n");
+            return 1;
+        }
         printf("\n");
     }
     freeVM(code, 0x1001000);

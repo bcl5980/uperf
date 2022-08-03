@@ -1,7 +1,7 @@
 #ifndef __GEN_AARCH64_H__
 #define __GEN_AARCH64_H__
 
-void genPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayCnt, int codeDupCnt, int codeLoopCnt,
+bool genPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayCnt, int codeDupCnt, int codeLoopCnt,
                 int gp) {
     int i = 0;
 
@@ -17,7 +17,7 @@ void genPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
             for (int j = 0; j < delayCnt; j++) {
                 inst[i++] = 0x9ac10820; // udiv x0, x1, x1
             }
-        } else {
+        } else if (caseId >= SqrtNop) {
             for (int j = 0; j < delayCnt; j++) {
                 inst[i++] = 0x1e61c000; // sqrt d0, d0
             }
@@ -40,6 +40,27 @@ void genPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
 
         for (int j = 0; j < testCnt; j++) {
             switch (caseId) {
+            case InstNop:
+                inst[i++] = 0xd503201f; // nop
+                break;
+            case InstMov:
+                inst[i++] = 0xaa0103e0; // mov x0, x1
+                break;
+            case InstIAdd:
+                inst[i++] = 0x8b010020; // add x0, x1, x1
+                break;
+            case InstIAddChain:
+                inst[i++] = 0x8b010000; // add x0, x0, x1
+                break;
+            case InstFAdd:
+                inst[i++] = 0x1e222841; // fadd s1, s2, s2
+                break;
+            case InstFAddChain:
+                inst[i++] = 0x1e222821; // fadd s1, s1, s2
+                break;
+            case InstCmp:
+                inst[i++] = 0xeb01001f; // cmp x0, x1
+                break;
             case SqrtNop:
             case SqrtNopIAdd:
                 inst[i++] = 0xd503201f; // nop
@@ -103,7 +124,7 @@ void genPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
                 inst[i++] = 0x14000001; // b .+4
                 break;
             default:
-                return;
+                return false;
             }
         }
 
@@ -117,6 +138,7 @@ void genPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
     inst[i++] = 0xd65f03c0;
 
     genCodeEnd(inst, i * sizeof(int));
+    return true;
 }
 
 void fillnop(unsigned char *instBuf, unsigned sizeBytes) {

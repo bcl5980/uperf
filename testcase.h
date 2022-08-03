@@ -2,6 +2,16 @@
 #define __TESTCASE_H__
 
 enum TestCase {
+    InstNop,
+    InstMov,
+    InstIAdd,
+    InstIAddChain,
+    InstFAdd,
+    InstFAddChain,
+    InstCmp,
+    InstLea3,
+    InstLea3Chain,
+
     SqrtNop,              // ROB Size
     SqrtMov,              // Check Zero Move feature
     SqrtMovSelf,          // Check Move Self Opt & Physical Reg Size
@@ -26,7 +36,16 @@ enum TestCase {
     TestCaseEnd,
 };
 
-const char *TestCaseName[TestCaseEnd] = {"Sqrt Delay + Nop",
+const char *TestCaseName[TestCaseEnd] = {"Inst Nop",
+                                         "Inst Mov",
+                                         "Inst IAdd",
+                                         "Inst IAddChain",
+                                         "Inst FAdd",
+                                         "Inst FAddChain",
+                                         "Inst Cmp",
+                                         "Inst Lea3",
+                                         "Inst Lea3Chain",
+                                         "Sqrt Delay + Nop",
                                          "Sqrt Delay + Mov",
                                          "Sqrt Delay + Mov Self",
                                          "Sqrt Delay + Mov Self(FP)",
@@ -49,6 +68,15 @@ const char *TestCaseName[TestCaseEnd] = {"Sqrt Delay + Nop",
                                          "Sqrt Delay + V/FAdd + IAdd"};
 
 const char *TestCaseGP[TestCaseEnd] = {
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
     "None",
     "None",
     "None",
