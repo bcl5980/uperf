@@ -41,9 +41,7 @@ enum TestCase {
     SchFAddChainNop,    // Schedule Queue for Float Test2
 
     PeriodIAddNop,      // Schedule Queue for Int Test3
-    PeriodIAddChainNop, // Schedule Queue for Int Test4
     PeriodFAddNop,      // Schedule Queue for Float Test3
-    PeriodFAddChainNop, // Schedule Queue for Float Test4
     TestCaseEnd,
 };
 
@@ -83,9 +81,7 @@ const char *TestCaseName[TestCaseEnd] = {
     "FAdd + Nop",
     "FAddChain + Nop",
     "Period IAdd + Nop",
-    "Period IAddChain + Nop",
     "Period FAdd + Nop",
-    "Period FAddChain + Nop",
 };
 
 const char *TestCaseGP[TestCaseEnd] = {
@@ -123,8 +119,6 @@ const char *TestCaseGP[TestCaseEnd] = {
     "None",
     "None",
     "None",
-    "Renaming Throughput",
-    "Renaming Throughput",
     "Renaming Throughput",
     "Renaming Throughput",
 };

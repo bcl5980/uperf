@@ -152,14 +152,8 @@ static bool genPeriodPattern(TestCase caseId, unsigned int *inst, int period, in
             case PeriodIAddNop:
                 inst[i++] = 0x8b010020; // add x0, x1, x1
                 break;
-            case PeriodIAddChainNop:
-                inst[i++] = 0x8b010000; // add x0, x0, x1
-                break;
             case PeriodFAddNop:
                 inst[i++] = 0x1e222841; // fadd s1, s2, s2
-                break;
-            case PeriodFAddChainNop:
-                inst[i++] = 0x1e222821; // fadd s1, s1, s2
                 break;
             default:
                 return false;
