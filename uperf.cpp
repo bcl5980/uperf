@@ -20,7 +20,7 @@ bool runPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
         return false;
 
     size_t r0 = 0;
-    size_t r1 = 0;
+    size_t r1 = 8;
     size_t *r2 = data0;
     size_t *r3 = data1;
     // __debugbreak();

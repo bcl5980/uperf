@@ -15,7 +15,7 @@ bool genPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
     for (int k = 0; k < codeDupCnt; k++) {
         if (caseId == UdivVFAdd || caseId == SqrtMovSelfFp) {
             for (int j = 0; j < delayCnt; j++) {
-                inst[i++] = 0x9ac10820; // udiv x0, x1, x1
+                inst[i++] = 0x9ac10821; // udiv x1, x1, x1
             }
         } else if (caseId >= SqrtNop) {
             for (int j = 0; j < delayCnt; j++) {
