@@ -8,7 +8,7 @@ enum TestCase {
     InstIALUChain,
     InstFALU,
     InstFALUChain,
-    InstCmp,
+    InstICmp,
     InstLea3,
     InstLea3Chain,
 
@@ -18,7 +18,7 @@ enum TestCase {
     SqrtMovSelfFp,        // Float version Check Move Self Opt & Physical Reg Size
     SqrtIALU,             // Int Physical Reg Size
     UdivVFALU,            // Float Physical Reg Size
-    SqrtCmp,              // Status Physical Reg Size
+    SqrtICmp,             // Status Physical Reg Size
     SqrtIALUICmp,         // Check if the Status and Int Physical Reg is shared or not
     SqrtIFALU,            // Check if the Float and Int Physical Reg is shared or not
     SqrtLoad,             // Load Buffer Size Test1

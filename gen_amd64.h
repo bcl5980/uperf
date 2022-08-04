@@ -115,8 +115,8 @@ bool genPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
                 instBuf[i++] = 0xfe;
                 instBuf[i++] = 0xc1;
                 break;
-            case InstCmp:
-            case SqrtCmp:
+            case InstICmp:
+            case SqrtICmp:
                 instBuf[i++] = 0x48; // cmp rax, rcx
                 instBuf[i++] = 0x39;
                 instBuf[i++] = 0xC8;

@@ -91,8 +91,8 @@ static bool genContent(TestCase caseId, unsigned int *inst, int testCnt, int gp,
         case SqrtVFALUIALU:
             inst[i++] = 0x1e20c041; // fabs s1, s2
             break;
-        case InstCmp:
-        case SqrtCmp:
+        case InstICmp:
+        case SqrtICmp:
             inst[i++] = 0xeb01001f; // cmp x0, x1
             break;
         case SqrtIALUICmp:
