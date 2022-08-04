@@ -19,6 +19,9 @@ static void genDelayPattern(TestCase caseId, unsigned int *inst, int delayCnt, u
             case SchIAddChainNop:
                 inst[i++] = 0x8b010000; // add x0, x0, x1
                 break;
+            case SchICmpNop:
+                inst[i++] = 0xeb01001f; // cmp x0, x1
+                break;
             case SchFAddNop:
                 inst[i++] = 0x1e222841; // fadd s1, s2, s2
                 break;
@@ -64,6 +67,7 @@ static bool genContent(TestCase caseId, unsigned int *inst, int testCnt, int gp,
         case SqrtNopIAdd:
         case SchIAddNop:
         case SchIAddChainNop:
+        case SchICmpNop:
         case SchFAddNop:
         case SchFAddChainNop:
             inst[i++] = 0xd503201f; // nop
@@ -153,6 +157,9 @@ static bool genPeriodPattern(TestCase caseId, unsigned int *inst, int period, in
             switch (caseId) {
             case PeriodIAddNop:
                 inst[i++] = 0x8b010020; // add x0, x1, x1
+                break;
+            case PeriodICmpNop:
+                inst[i++] = 0xeb01001f; // cmp x0, x1
                 break;
             case PeriodFAddNop:
                 inst[i++] = 0x1e222841; // fadd s1, s2, s2

@@ -37,10 +37,12 @@ enum TestCase {
     // @todo: add x86 support
     SchIAddNop,         // Schedule Queue for Int Test1
     SchIAddChainNop,    // Schedule Queue for Int Test2
+    SchICmpNop,         // Schedule Queue for Int Test3
     SchFAddNop,         // Schedule Queue for Float Test1
     SchFAddChainNop,    // Schedule Queue for Float Test2
 
-    PeriodIAddNop,      // Schedule Queue for Int Test3
+    PeriodIAddNop,      // Schedule Queue for Int Test4
+    PeriodICmpNop,      // Schedule Queue for Int Test5
     PeriodFAddNop,      // Schedule Queue for Float Test3
     TestCaseEnd,
 };
@@ -78,9 +80,11 @@ const char *TestCaseName[TestCaseEnd] = {
     "Sqrt Delay + V/FAdd + IAdd",
     "IAdd + Nop",
     "IAddChain + Nop",
+    "ICmp + Nop",
     "FAdd + Nop",
     "FAddChain + Nop",
     "Period IAdd + Nop",
+    "Period ICmp + Nop",
     "Period FAdd + Nop",
 };
 
@@ -119,6 +123,8 @@ const char *TestCaseGP[TestCaseEnd] = {
     "None",
     "None",
     "None",
+    "None",
+    "Renaming Throughput",
     "Renaming Throughput",
     "Renaming Throughput",
 };
