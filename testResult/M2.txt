@@ -3,7 +3,7 @@ InstMov                      8                               Renaming Throughput
 InstIALU                     6                               Simple Int ALU Throughput
 InstIALUChain                < 1 ?                           Add Latency
 InstFALU                     4                               Simple Float ALU Throughput
-InstFALUChain                1 / 3                           Float Add Latency
+InstFALUChain                1 / 3                           Simple Float ALU Latency
 InstCmp                      3                               Compare ALU Throughput
 InstLea3                     not support
 InstLea3Chain                not support
