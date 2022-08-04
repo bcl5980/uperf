@@ -9,15 +9,15 @@ InstLea3                     not support
 InstLea3Chain                not support
 SqrtNop                      2016~                           ROB Size
 SqrtMov                      580~                            ROB Size with register
-SqrtMovSelf                  2016~                           ROB Size, looks MovSelf opitmized to Nop
-SqrtMovSelfFp                ?                               Can't Measure, maybe program issue
+SqrtMovSelf                  2016~                           ROB Size, looks mov self opitmized to Nop
+SqrtMovSelfFp                N/A                             No fmov self opitmization
 SqrtIALU                     344                             Int Physical Register Should +32 for x0-x31
 UdivVFALU                    366                             Float/SIMD Register Should +32 for v0-v31
-SqrtICmp                      124                            Status Register
+SqrtICmp                     124                             Status Register
 SqrtIALUICmp                 124                             Make sure Status share with Int Physical Reg or not
 SqrtIFALU                    290                             Make sure Float share with Int Physical Reg or not
 SqrtLoad                     288                             
-SqrtLoadSeq                  169
+SqrtLoadSeq                  170
 SqrtLoadUnKnownAddr          62
 SqrtStore                    288
 SqrtStoreSeq                 286
