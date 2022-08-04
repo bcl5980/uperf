@@ -9,5 +9,5 @@ Uncondition Jump: 14
 Condtion And Uncondition Jump Share 14
 
 Renaming IPC: 4
-IADD IPC: 3
+IALU IPC: 3
 Dispatch Buffer: 32

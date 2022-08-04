@@ -41,7 +41,7 @@ bool runPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
     }
 
     int codeExecCnt;
-    if (caseId >= PeriodIAddNop)
+    if (caseId >= PeriodIALUNop)
         codeExecCnt = codeLoopCnt;
     else
         codeExecCnt = codeLoopCnt * codeDupCnt;

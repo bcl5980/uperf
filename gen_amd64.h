@@ -10,7 +10,7 @@ bool genPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
     // https://docs.microsoft.com/en-us/cpp/build/x64-calling-convention?view=msvc-170
 
     for (int k = 0; k < codeDupCnt; k++) {
-        if (caseId == UdivVFAdd) {
+        if (caseId == UdivVFALU) {
             for (int j = 0; j < delayCnt; j++) {
                 instBuf[i++] = 0x48; // xor    rdx,rdx
                 instBuf[i++] = 0x31;
@@ -52,12 +52,12 @@ bool genPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
 
         for (int j = 0; j < testCnt; j++) {
             switch (caseId) {
-            case InstIAddChain:
+            case InstIALUChain:
                 instBuf[i++] = 0x48; // add rax, rcx
                 instBuf[i++] = 0x01;
                 instBuf[i++] = 0xc8;
                 break;
-            case InstFAddChain:
+            case InstFALUChain:
                 instBuf[i++] = 0xc5; // VPADDD xmm0, xmm0, xmm1
                 instBuf[i++] = 0xf9;
                 instBuf[i++] = 0xfe;
@@ -79,7 +79,7 @@ bool genPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
                 break;
             case InstNop:
             case SqrtNop:
-            case SqrtNopIAdd:
+            case SqrtNopIALU:
                 instBuf[i++] = 0x48; // nop
                 instBuf[i++] = 0x89;
                 instBuf[i++] = 0xc8;
@@ -101,15 +101,15 @@ bool genPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
                 instBuf[i++] = 0x7e;
                 instBuf[i++] = 0xc9;
                 break;
-            case InstIAdd:
-            case SqrtIAdd:
+            case InstIALU:
+            case SqrtIALU:
                 instBuf[i++] = 0x48; // lea rax,[rbx+rcx]
                 instBuf[i++] = 0x8d;
                 instBuf[i++] = 0x04;
                 instBuf[i++] = 0x0b;
                 break;
-            case InstFAdd:
-            case UdivVFAdd:
+            case InstFALU:
+            case UdivVFALU:
                 instBuf[i++] = 0xc5; // VPADDD xmm0, xmm1, xmm1
                 instBuf[i++] = 0xf1;
                 instBuf[i++] = 0xfe;
@@ -121,7 +121,7 @@ bool genPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
                 instBuf[i++] = 0x39;
                 instBuf[i++] = 0xC8;
                 break;
-            case SqrtIAddICmp:
+            case SqrtIALUICmp:
                 instBuf[i++] = 0x48; // lea rax,[rbx+rcx]
                 instBuf[i++] = 0x8d;
                 instBuf[i++] = 0x04;
@@ -130,7 +130,7 @@ bool genPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
                 instBuf[i++] = 0x39;
                 instBuf[i++] = 0xC2;
                 break;
-            case SqrtIFAdd:
+            case SqrtIFALU:
                 instBuf[i++] = 0x48; // lea rax,[rbx+rcx]
                 instBuf[i++] = 0x8d;
                 instBuf[i++] = 0x04;
@@ -199,7 +199,7 @@ bool genPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
                 instBuf[i++] = 0xeb; // jmp 0
                 instBuf[i++] = 0x00;
                 break;
-            case SqrtVFAddIAdd:
+            case SqrtVFALUIALU:
                 instBuf[i++] = 0xc5; // VPADDD xmm2, xmm1, xmm1
                 instBuf[i++] = 0xf1;
                 instBuf[i++] = 0xfe;
@@ -210,7 +210,7 @@ bool genPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
             }
         }
 
-        if (caseId == SqrtNopIAdd || caseId == SqrtVFAddIAdd) {
+        if (caseId == SqrtNopIALU || caseId == SqrtVFALUIALU) {
             for (int j = 0; j < gp; j++) {
                 instBuf[i++] = 0x48; // lea rax,[rbx+rcx]
                 instBuf[i++] = 0x8d;
