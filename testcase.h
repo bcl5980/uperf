@@ -11,6 +11,8 @@ enum TestCase {
     InstICmp,
     InstLea3,
     InstLea3Chain,
+    InstLoad,
+    InstStore,
 
     SqrtNop,              // ROB Size
     SqrtMov,              // Check Zero Move feature
@@ -57,6 +59,8 @@ const char *TestCaseName[TestCaseEnd] = {
     "Inst Cmp",
     "Inst Lea3",
     "Inst Lea3Chain",
+    "Inst Load",
+    "Inst Store",
     "Sqrt Delay + Nop",
     "Sqrt Delay + Mov",
     "Sqrt Delay + Mov Self",
@@ -89,6 +93,8 @@ const char *TestCaseName[TestCaseEnd] = {
 };
 
 const char *TestCaseGP[TestCaseEnd] = {
+    "None",
+    "None",
     "None",
     "None",
     "None",

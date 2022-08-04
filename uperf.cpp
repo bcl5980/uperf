@@ -116,7 +116,7 @@ int main(int argc, char *argv[]) {
 
     size_t *data0 = nullptr;
     size_t *data1 = nullptr;
-    if (caseId >= SqrtLoad && caseId <= SqrtStoreUnknownVal) {
+    if ((caseId >= SqrtLoad && caseId <= SqrtStoreUnknownVal) || (caseId >= InstLoad && caseId <= InstStore)) {
         data0 = new size_t[0x1000000];
         data1 = new size_t[0x1000000];
         data0[0] = (size_t)data0;

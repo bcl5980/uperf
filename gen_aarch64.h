@@ -103,6 +103,7 @@ static bool genContent(TestCase caseId, unsigned int *inst, int testCnt, int gp,
             inst[i++] = 0x8b010020; // add x0, x1, x1
             inst[i++] = 0x1e20c041; // fabs s1, s2
             break;
+        case InstLoad:
         case SqrtLoad:
             inst[i++] = 0xf9400041; // ldr x1, [x2]
             break;
@@ -112,6 +113,7 @@ static bool genContent(TestCase caseId, unsigned int *inst, int testCnt, int gp,
         case SqrtLoadUnKnownAddr:
             inst[i++] = 0xf8616842; // ldr x2, [x2, x1]
             break;
+        case InstStore:
         case SqrtStore:
             inst[i++] = 0xf9000040; // str x0, [x2]
             break;

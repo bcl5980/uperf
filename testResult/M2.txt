@@ -7,6 +7,9 @@ InstFALUChain                1 / 2                           (Fabs) Float ALU La
 InstICmp                     3                               Compare ALU Throughput
 InstLea3                     not support
 InstLea3Chain                not support
+InstLoad                     3~                              Int Load Throughput
+InstStore                    2                               Int Store Throughput
+
 SqrtNop                      2016~                           ROB Size
 SqrtMov                      580~                            ROB Size with register
 SqrtMovSelf                  2016~                           ROB Size, looks mov self opitmized to Nop
