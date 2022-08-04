@@ -186,6 +186,15 @@ bool genPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
     // X0-X17, v0-v7, v16-v31 volatile, we can use them
     // X18-X30, v8-v15 nonvolatile, we can't use them
     // https://docs.microsoft.com/en-us/cpp/build/arm64-windows-abi-conventions?view=msvc-170
+
+    // MACOSX ABI
+    // AAPCS64 (Procedure Call Standard for the ARM 64-bit Architecture) says
+    // registers x19 through x28 and sp are callee preserved. v8-v15 are non-
+    // volatile (and specifically only the lower 8 bytes of these regs), the rest
+    // of the fp/SIMD registers are volatile.
+    //
+    // v. https://github.com/ARM-software/abi-aa/blob/main/aapcs64/
+    // Volatile registers: x0-x18, x30 (lr)
     if (caseId >= PeriodIAddNop) {
         genPeriodPattern(caseId, inst, testCnt, delayCnt, codeDupCnt, gp, i);
     } else {
