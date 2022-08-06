@@ -9,8 +9,8 @@ enum TestCase {
     InstFALU,
     InstFALUChain,
     InstICmp,
-    InstLea3,
-    InstLea3Chain,
+    InstLea3,             // x86 only
+    InstLea3Chain,        // x86 only
     InstLoad,
     InstStore,
 
@@ -38,6 +38,11 @@ enum TestCase {
     SqrtVFALUIALU,        // Test ROB register retire speed
 
     // @todo: add x86 support
+    SchSqrtIALUDep,       // Sqrt Result is IALU input
+    SchSqrtIALUChainDep,  // Sqrt Result is IALU chain input
+    SchSDivFALUDep,       // Sdiv result is FALU input
+    SchSDivFALUChainDep,  // Sdiv result is FALU chain input
+
     SchIALUNop,         // Schedule Queue for Int Test1
     SchIALUChainNop,    // Schedule Queue for Int Test2
     SchICmpNop,         // Schedule Queue for Int Test3
@@ -84,6 +89,10 @@ const char *TestCaseName[TestCaseEnd] = {
     "Sqrt Delay + Jump&CJump",
     "Sqrt Delay + Nop + IALU",
     "Sqrt Delay + V/FALU + IALU",
+    "Sqrt Delay + IALU depency on Delay",
+    "Sqrt Delay + IALU chain depency on Delay",
+    "SDiv Delay + FALU depency on Delay",
+    "SDiv Delay + FALU chain depency on Delay",
     "IALU + Nop",
     "IALUChain + Nop",
     "ICmp + Nop",
@@ -128,6 +137,10 @@ const char *TestCaseGP[TestCaseEnd] = {
     "None",
     "Int physical register size",
     "Int physical register size",
+    "None",
+    "None",
+    "None",
+    "None",
     "None",
     "None",
     "None",

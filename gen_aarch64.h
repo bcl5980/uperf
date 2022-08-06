@@ -4,8 +4,12 @@
 static void genDelayPattern(TestCase caseId, unsigned int *inst, int delayCnt, unsigned &i) {
     if (caseId == UdivVFALU || caseId == SqrtMovSelfFp) {
         for (int j = 0; j < delayCnt; j++) {
-            inst[i++] = 0x9ac10821; // udiv x1, x1, x1
+            inst[i++] = 0x9ac10841; // udiv x1, x2, x1
         }
+    } else if (caseId == SchSDivFALUChainDep || caseId == SchSDivFALUDep) {
+        for (int j = 0; j < delayCnt; j++) {
+            inst[i++] = 0x9ac10c41; // sdiv x1, x2, x1
+        }        
     } else if (caseId >= SqrtNop && caseId < SchIALUNop) {
         for (int j = 0; j < delayCnt; j++) {
             inst[i++] = 0x1e61c000; // sqrt d0, d0
@@ -23,10 +27,10 @@ static void genDelayPattern(TestCase caseId, unsigned int *inst, int delayCnt, u
                 inst[i++] = 0xeb01001f; // cmp x0, x1
                 break;
             case SchFALUNop:
-                inst[i++] = 0x1e20c041; // fabs s1, s2
+                inst[i++] = 0x1e60c001; // fabs d1, d0
                 break;
             case SchFALUChainNop:
-                inst[i++] = 0x1e20c021; // fabs s1, s1
+                inst[i++] = 0x1e60c000; // fabs d0, d0
                 break;
             default:
                 break;
@@ -45,8 +49,15 @@ static void genPrologue(TestCase caseId, unsigned int *inst, unsigned &i) {
     case SqrtLoadUnKnownAddr:
     case SqrtStoreUnknownAddr:
     case SqrtStoreUnknownVal:
+    case SchSqrtIALUDep:
+    case SchSqrtIALUChainDep:
         // fcvtzu x1, d0
         inst[i++] = 0x9e790001;
+        break;
+    case SchSDivFALUDep:
+    case SchSDivFALUChainDep:
+        // scvtf d0, x1
+        inst[i++] = 0x9e620020;
         break;
     default:
         break;
@@ -57,10 +68,12 @@ static bool genContent(TestCase caseId, unsigned int *inst, int testCnt, int gp,
     for (int j = 0; j < testCnt; j++) {
         switch (caseId) {
         case InstIALUChain:
+        case SchSqrtIALUChainDep:
             inst[i++] = 0x8b010000; // add x0, x0, x1
             break;
         case InstFALUChain:
-            inst[i++] = 0x1e20c021; // fabs s1, s1
+        case SchSDivFALUChainDep:
+            inst[i++] = 0x1e60c000; // fabs d0, d0
             break;
         case InstNop:
         case SqrtNop:
@@ -84,13 +97,14 @@ static bool genContent(TestCase caseId, unsigned int *inst, int testCnt, int gp,
             break;
         case InstIALU:
         case SqrtIALU:
+        case SchSqrtIALUDep:
             inst[i++] = 0x8b010020; // add x0, x1, x1
             break;
         case InstFALU:
         case UdivVFALU:
         case SqrtVFALUIALU:
-            inst[i++] = 0x1e20c041; // fabs s1, s2
-            break;
+        case SchSDivFALUDep:
+            inst[i++] = 0x1e60c001; // fabs d1, d0
         case InstICmp:
         case SqrtICmp:
             inst[i++] = 0xeb01001f; // cmp x0, x1
@@ -101,7 +115,7 @@ static bool genContent(TestCase caseId, unsigned int *inst, int testCnt, int gp,
             break;
         case SqrtIFALU:
             inst[i++] = 0x8b010020; // add x0, x1, x1
-            inst[i++] = 0x1e20c041; // fabs s1, s2
+            inst[i++] = 0x1e60c001; // fabs d1, d0
             break;
         case InstLoad:
         case SqrtLoad:
@@ -112,7 +126,7 @@ static bool genContent(TestCase caseId, unsigned int *inst, int testCnt, int gp,
             inst[i++] = 0xf8408441; // ldr x1, [x2], 8
             break;
         case SqrtLoadUnKnownAddr:
-            inst[i++] = 0xf8616842; // ldr x2, [x2, x1]
+            inst[i++] = 0xf8616840; // ldr x0, [x2, x1]
             break;
         case SqrtLoadChain:
             inst[i++] = 0xf9400042; // ldr x2, [x2]
