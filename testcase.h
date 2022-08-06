@@ -26,6 +26,7 @@ enum TestCase {
     SqrtLoad,             // Load Buffer Size Test1
     SqrtLoadSeq,          // Load Buffer Size Test2
     SqrtLoadUnKnownAddr,  // Load Buffer Size Test3
+    SqrtLoadChain,        // Load Buffer Size Test4
     SqrtStore,            // Store Buffer Size Test1
     SqrtStoreSeq,         // Store Buffer Size Test2
     SqrtStoreUnknownAddr, // Store Buffer Size Test3
@@ -73,6 +74,7 @@ const char *TestCaseName[TestCaseEnd] = {
     "Sqrt Delay + Load Same Addr",
     "Sqrt Delay + Load Linear Addr",
     "Sqrt Delay + Load Unknown Addr",
+    "Sqrt Dealy + Load Chain Addr",
     "Sqrt Delay + Store Same Addr",
     "Sqrt Delay + Store Linear Addr",
     "Sqrt Delay + Store Unknown Addr",
@@ -93,6 +95,7 @@ const char *TestCaseName[TestCaseEnd] = {
 };
 
 const char *TestCaseGP[TestCaseEnd] = {
+    "None",
     "None",
     "None",
     "None",

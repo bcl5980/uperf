@@ -160,6 +160,11 @@ bool genPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
                 instBuf[i++] = 0x04;
                 instBuf[i++] = 0x08;
                 break;
+            case SqrtLoadChain:
+                instBuf[i++] = 0x4d; // mov r8, QWORD PTR [r8]
+                instBuf[i++] = 0x8b;
+                instBuf[i++] = 0x00;
+                break
             case SqrtStore:
                 instBuf[i++] = 0x49; // mov QWORD PTR [r8], rax
                 instBuf[i++] = 0x89;

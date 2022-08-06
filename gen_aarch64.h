@@ -106,12 +106,16 @@ static bool genContent(TestCase caseId, unsigned int *inst, int testCnt, int gp,
         case InstLoad:
         case SqrtLoad:
             inst[i++] = 0xf9400041; // ldr x1, [x2]
+            // inst[i++] = 0xa9400440; // ldp x0, x1, [x2]
             break;
         case SqrtLoadSeq:
             inst[i++] = 0xf8408441; // ldr x1, [x2], 8
             break;
         case SqrtLoadUnKnownAddr:
             inst[i++] = 0xf8616842; // ldr x2, [x2, x1]
+            break;
+        case SqrtLoadChain:
+            inst[i++] = 0xf9400042; // ldr x2, [x2]
             break;
         case InstStore:
         case SqrtStore:
