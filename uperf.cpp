@@ -163,8 +163,8 @@ int main(int argc, char *argv[]) {
             param.epilogueCnt = atoi(argv[i + 1]);
         else if (strcmp(argv[i], "-loop") == 0)
             param.loopCnt = atoi(argv[i + 1]);
-        else if (strcmp(argv[i], "-period") == 0)
-            param.period = atoi(argv[i + 1]);
+        else if (strcmp(argv[i], "-inst_num") == 0)
+            param.instNum = atoi(argv[i + 1]);
         else if (strcmp(argv[i], "-thrput_inst") == 0)
             param.testInstTP = atoi(argv[i + 1]);
         else if (strcmp(argv[i], "-thrput_fill") == 0)
@@ -181,15 +181,24 @@ int main(int argc, char *argv[]) {
                 printf("%2d, %36s,    %s\n", i, TestCaseName[i], TestCaseGP[i]);
             }
 
-            printf("Example:\n"
-                   "uperf -case  0    \n"
-                   "      -start 100  \n"
-                   "      -end   1000 \n"
-                   "      -step  10   \n"
-                   "      -delay 8    :ignore when only measure inst throughput\n"
-                   "      -dup   1    :unroll counter for the measure pattern\n"
-                   "      -loop  1000 :loop counter for the measure pattern\n"
-                   "      -gp    160  :general paramater for some cases\n");
+            printf("DelayMode:\n"
+                   "uperf -case       14    \n"
+                   "      -start      100  \n"
+                   "      -end        1000 \n"
+                   "      -step       10   \n"
+                   "      -delay      8    \n"
+                   "      -prologue   1    \n"
+                   "      -epilogue   160  \n"
+                   "      -loop       1000 \n\n"
+                   "PeriodMode:\n"
+                   "uperf -case        42    \n"
+                   "      -start       1     \n"
+                   "      -end         16    \n"
+                   "      -step        1     \n"
+                   "      -inst_num    10000 \n"
+                   "      -thrput_inst 6     \n"
+                   "      -thrput_fill 8     \n"
+                   "      -loop        1000  \n");
             return 0;
         }
     }

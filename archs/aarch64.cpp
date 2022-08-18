@@ -1,8 +1,8 @@
 #if defined(__aarch64__) || defined(_M_ARM64)
-#include <vector>
 #include "arch.h"
 #include "osutils.h"
 #include "uperf.h"
+#include <vector>
 
 inline unsigned pair(unsigned char a0, unsigned char a1, unsigned char a2, unsigned char a3) {
     return ((unsigned)a3 << 24) | ((unsigned)a2 << 16) | ((unsigned)a1 << 8) | a0;
@@ -98,7 +98,7 @@ bool genPattern(PatConfig &config, unsigned char *instBuf, TestParam &param, uns
     // v. https://github.com/ARM-software/abi-aa/blob/main/aapcs64/
     // Volatile registers: x0-x18, x30 (lr)
     if (config.mode == WorkMode::PeriodTest) {
-        genPeriodPattern(config, inst, testCnt, param.period, param.testInstTP, param.fillInstTP,
+        genPeriodPattern(config, inst, testCnt, param.instNum, param.testInstTP, param.fillInstTP,
                          i);
     } else {
         genDelayPattern(config, inst, param.delayCnt, i);

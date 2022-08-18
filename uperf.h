@@ -107,7 +107,7 @@ struct TestParam {
             unsigned epilogueCnt;
         };
         struct {
-            unsigned period;
+            unsigned instNum;
             unsigned testInstTP;
             unsigned fillInstTP;
         };
