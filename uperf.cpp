@@ -30,7 +30,7 @@ bool runPattern(PatConfig &config, unsigned char *instBuf, int testCnt, int dela
     // warm icache
     ((size_t(*)(size_t, size_t, void *, void *))instBuf)(r0, r1, r2, r3);
 
-    size_t min = -1ull;
+    size_t min = -1;
     for (int k = 0; k < 10; k++) {
         size_t start = getclock();
         for (int i = 0; i < codeLoopCnt; i++) {

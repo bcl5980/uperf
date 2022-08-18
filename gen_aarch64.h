@@ -3,7 +3,7 @@
 #include <vector>
 
 inline unsigned pair(unsigned char a0, unsigned char a1, unsigned char a2, unsigned char a3) {
-    return ((unsigned)a3 << 24) | ((unsigned)a2 << 16) | ((unsigned)a1 << 8) | a3;
+    return ((unsigned)a3 << 24) | ((unsigned)a2 << 16) | ((unsigned)a1 << 8) | a0;
 }
 
 static bool genConfigForDefaultCases(TestCase caseId, PatConfig &config) {
@@ -283,34 +283,43 @@ static bool genConfigForDefaultCases(TestCase caseId, PatConfig &config) {
 
 static void genDelayPattern(PatConfig &config, unsigned int *inst, int delayCnt, unsigned &i) {
     const std::vector<InstBytes> &insts = config.di.delayPat;
+    if (insts.empty())
+        return;
+
     for (int j = 0; j < delayCnt; j++) {
-        for (auto inst : insts) {
-            inst[i++] = pair(inst[0], inst[1], inst[2], inst[3]);
+        for (auto ii : insts) {
+            inst[i++] = pair(ii[0], ii[1], ii[2], ii[3]);
         }
     }
 }
 
 static void genPrologue(PatConfig &config, unsigned int *inst, unsigned &i) {
     const std::vector<InstBytes> &insts = config.di.prologuePat;
-    for (auto inst : insts) {
-        inst[i++] = pair(inst[0], inst[1], inst[2], inst[3]);
+    for (auto ii : insts) {
+        inst[i++] = pair(ii[0], ii[1], ii[2], ii[3]);
     }
 }
 
 static void genContent(PatConfig &config, unsigned int *inst, int testCnt, unsigned &i) {
     const std::vector<InstBytes> &insts = config.di.contentPat;
+    if (insts.empty())
+        return;
+
     for (int j = 0; j < testCnt; j++) {
-        for (auto inst : insts) {
-            inst[i++] = pair(inst[0], inst[1], inst[2], inst[3]);
+        for (auto ii : insts) {
+            inst[i++] = pair(ii[0], ii[1], ii[2], ii[3]);
         }
     }
 }
 
 static void genEpilogue(PatConfig &config, unsigned int *inst, int gp, unsigned &i) {
     const std::vector<InstBytes> &insts = config.di.epiloguePat;
+    if (insts.empty())
+        return;
+
     for (int j = 0; j < gp; j++) {
-        for (auto inst : insts) {
-            inst[i++] = pair(inst[0], inst[1], inst[2], inst[3]);
+        for (auto ii : insts) {
+            inst[i++] = pair(ii[0], ii[1], ii[2], ii[3]);
         }
     }
 }
@@ -377,7 +386,7 @@ void fillnop(unsigned char *instBuf, unsigned sizeBytes) {
     genCodeStart();
     unsigned nopCnt = sizeBytes / 4;
     unsigned *inst = (unsigned *)instBuf;
-    for (int i = 0; i < nopCnt; i++)
+    for (unsigned i = 0; i < nopCnt; i++)
         inst[i] = 0xd503201f;
     genCodeEnd(instBuf, sizeBytes);
 }
