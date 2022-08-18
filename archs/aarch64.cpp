@@ -65,12 +65,12 @@ static void genPeriodPattern(PatConfig &config, unsigned *inst, unsigned period,
     const std::vector<InstBytes> &fillPat = config.pi.fillPat;
     for (unsigned j = 0, k = 0; j < instNum; j++) {
         if (k < InstCnt) {
-            for (auto inst : periodPat) {
-                inst[i++] = pair(inst[0], inst[1], inst[2], inst[3]);
+            for (auto ii : periodPat) {
+                inst[i++] = pair(ii[0], ii[1], ii[2], ii[3]);
             }
         } else {
-            for (auto inst : fillPat) {
-                inst[i++] = pair(inst[0], inst[1], inst[2], inst[3]);
+            for (auto ii : fillPat) {
+                inst[i++] = pair(ii[0], ii[1], ii[2], ii[3]);
             }
         }
         k++;
