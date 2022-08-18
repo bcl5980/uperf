@@ -52,16 +52,16 @@ bool runPattern(PatConfig &config, unsigned char *instBuf, int testCnt, int dela
 }
 
 int main(int argc, char *argv[]) {
-    int testBase = 100;
-    int testEnd = 1000;
-    int testStep = 10;
+    int testBase = 10;
+    int testEnd = 150;
+    int testStep = 1;
     int delayCnt = 20;
     int codeDupCnt = 1;
     int codeLoopCnt = 1000;
     int gp = 160;
-    TestCase caseId = InstNop;
+    TestCase caseId = SqrtNop;
     PatConfig config = {};
-    bool configFromFile = false;
+    int configFileIdx = -1;
 
     for (int i = 1; i < argc; i += 2) {
         if (strcmp(argv[i], "-case") == 0)
@@ -81,11 +81,11 @@ int main(int argc, char *argv[]) {
         else if (strcmp(argv[i], "-gp") == 0)
             gp = atoi(argv[i + 1]);
         else if (strcmp(argv[i], "-f") == 0) {
-            configFromFile = true;
             if (!parseConfig(config, argv[i + 1])) {
                 printf("Config file parse failed\n");
                 return 1;
             }
+            configFileIdx = i + 1;
         } else {
             printf("caseId                          case Name    case Parameter\n");
             for (int i = 0; i < TestCaseEnd; i++) {
@@ -105,25 +105,31 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    if (caseId < 0 || caseId >= TestCaseEnd) {
-        printf("caseId                          case Name    case Parameter\n");
-        for (int i = 0; i < TestCaseEnd; i++) {
-            printf("%2d, %36s,    %s\n", i, TestCaseName[i], TestCaseGP[i]);
+    if (configFileIdx < 0) {
+        if ((caseId < 0 || caseId >= TestCaseEnd)) {
+            printf("caseId                          case Name    case Parameter\n");
+            for (int i = 0; i < TestCaseEnd; i++) {
+                printf("%2d, %36s,    %s\n", i, TestCaseName[i], TestCaseGP[i]);
+            }
+            return 0;
         }
-        return 0;
-    }
 
-    if (!configFromFile && !genConfigForDefaultCases(caseId, config))
-        return 1;
+        if (caseId < SqrtNop)
+            delayCnt = 0;
+
+        if (!genConfigForDefaultCases(caseId, config))
+            return 1;
+
+        printf("case: %s\ndelayCnt:%d codeDupCnt:%d, codeLoopCnt:%d\n", TestCaseName[caseId], delayCnt, codeDupCnt,
+            codeLoopCnt);
+    } else {
+        printf("configfile: %s\ndelayCnt:%d codeDupCnt:%d, codeLoopCnt:%d\n", argv[configFileIdx], delayCnt, codeDupCnt,
+            codeLoopCnt);
+    }
 
     if (!procInit(0x01))
         return 1;
 
-    if (caseId < SqrtNop)
-        delayCnt = 0;
-
-    printf("case: %s\ndelayCnt:%d codeDupCnt:%d, codeLoopCnt:%d\n", TestCaseName[caseId], delayCnt, codeDupCnt,
-           codeLoopCnt);
     unsigned char *instBuf = allocVM(JitMemorySize);
     fillnop(instBuf, JitMemorySize);
 
