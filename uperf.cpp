@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "arch.h"
 #include "osutils.h"
 #include "pat_config.h"
 
@@ -14,45 +15,103 @@
 // https://armconverter.com/
 // https://defuse.ca/online-x86-assembler.htm
 
-struct TestParam {
-    WorkMode mode;
-    unsigned begin;
-    unsigned end;
-    unsigned step;
+const unsigned JitMemorySize = 0x1000000;
 
-    unsigned loopCnt;
-
-    union {
-        struct {
-            unsigned delayCnt;
-            unsigned prologueCnt;
-            unsigned epilogueCnt;
-        };
-        struct {
-            unsigned period;
-            unsigned testInstTP;
-            unsigned fillInstTP;
-        };
-    };
-
-    TestParam() {
-        mode = WorkMode::DelayTest;
-
-        begin = 10;
-        end = 150;
-        step = 1;
-
-        delayCnt = 20;
-        prologueCnt = 1;
-        epilogueCnt = 1;
-
-        loopCnt = 1000;
-    }
+const char *TestCaseName[TestCaseEnd] = {
+    "Inst Nop",
+    "Inst Mov",
+    "Inst IALU",
+    "Inst IALUChain",
+    "Inst FALU",
+    "Inst FALUChain",
+    "Inst Cmp",
+    "Inst Lea3",
+    "Inst Lea3Chain",
+    "Inst Load",
+    "Inst Store",
+    "Sqrt Delay + Nop",
+    "Sqrt Delay + Mov",
+    "Sqrt Delay + Mov Self",
+    "Sqrt Delay + Mov Self(FP)",
+    "Sqrt Delay + IALU",
+    "Udiv Delay + V/FALU",
+    "Sqrt Delay + Cmp",
+    "Sqrt Delay + Add&Cmp",
+    "Sqrt Delay + IALU&V/FALU",
+    "Sqrt Delay + Load Same Addr",
+    "Sqrt Delay + Load Linear Addr",
+    "Sqrt Delay + Load Unknown Addr",
+    "Sqrt Dealy + Load Chain Addr",
+    "Sqrt Delay + Store Same Addr",
+    "Sqrt Delay + Store Linear Addr",
+    "Sqrt Delay + Store Unknown Addr",
+    "Sqrt Delay + Store Unknown Value",
+    "Sqrt Delay + ConditionJump",
+    "Sqrt Delay + Jump",
+    "Sqrt Delay + Jump&CJump",
+    "Sqrt Delay + Nop + IALU",
+    "Sqrt Delay + V/FALU + IALU",
+    "Sqrt Delay + IALU depency on Delay",
+    "Sqrt Delay + IALU chain depency on Delay",
+    "SDiv Delay + FALU depency on Delay",
+    "SDiv Delay + FALU chain depency on Delay",
+    "IALU + Nop",
+    "IALUChain + Nop",
+    "ICmp + Nop",
+    "FALU + Nop",
+    "FALUChain + Nop",
+    "Period IALU + Nop",
+    "Period ICmp + Nop",
+    "Period FALU + Nop",
 };
 
-#include "gen.h"
-
-const unsigned JitMemorySize = 0x1000000;
+const char *TestCaseGP[TestCaseEnd] = {
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "Int physical register size",
+    "Int physical register size",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "None",
+    "Renaming Throughput",
+    "Renaming Throughput",
+    "Renaming Throughput",
+};
 
 bool runPattern(PatConfig &config, unsigned char *instBuf, TestParam &param, unsigned testCnt) {
     genPattern(config, instBuf, param, testCnt);

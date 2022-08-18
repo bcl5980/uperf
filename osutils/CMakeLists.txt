@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.4.1)
 project(osutils)
 
 set(CMAKE_CXX_STANDARD 11)
+include_directories(..)
 if (APPLE)
     add_library(osutils STATIC osutils_mac.cpp)
 else()

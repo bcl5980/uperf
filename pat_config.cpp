@@ -1,7 +1,7 @@
 #include <fstream>
 #include <stdio.h>
 
-#include "pat_config.h"
+#include "uperf.h"
 
 using std::ifstream;
 using std::string;
