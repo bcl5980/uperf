@@ -1,203 +1,343 @@
 #ifndef __GEN_AARCH64_H__
 #define __GEN_AARCH64_H__
+#include <vector>
 
-static void genDelayPattern(TestCase caseId, unsigned int *inst, int delayCnt, unsigned &i) {
-    if (caseId == UdivVFALU || caseId == SqrtMovSelfFp) {
-        for (int j = 0; j < delayCnt; j++) {
-            inst[i++] = 0x9ac10841; // udiv x1, x2, x1
-        }
-    } else if (caseId == SchSDivFALUChainDep || caseId == SchSDivFALUDep) {
-        for (int j = 0; j < delayCnt; j++) {
-            inst[i++] = 0x9ac10c41; // sdiv x1, x2, x1
-        }        
-    } else if (caseId >= SqrtNop && caseId < SchIALUNop) {
-        for (int j = 0; j < delayCnt; j++) {
-            inst[i++] = 0x1e61c000; // sqrt d0, d0
-        }
-    } else {
-        for (int j = 0; j < delayCnt; j++) {
-            switch (caseId) {
-            case SchIALUNop:
-                inst[i++] = 0x8b010020; // add x0, x1, x1
-                break;
-            case SchIALUChainNop:
-                inst[i++] = 0x8b010000; // add x0, x0, x1
-                break;
-            case SchICmpNop:
-                inst[i++] = 0xeb01001f; // cmp x0, x1
-                break;
-            case SchFALUNop:
-                inst[i++] = 0x1e60c001; // fabs d1, d0
-                break;
-            case SchFALUChainNop:
-                inst[i++] = 0x1e60c000; // fabs d0, d0
-                break;
-            default:
-                break;
-            }
-        }
-    }
+inline unsigned pair(unsigned char a0, unsigned char a1, unsigned char a2, unsigned char a3) {
+    return ((unsigned)a3 << 24) | ((unsigned)a2 << 16) | ((unsigned)a1 << 8) | a3;
 }
 
-static void genPrologue(TestCase caseId, unsigned int *inst, unsigned &i) {
+static bool genConfigForDefaultCases(TestCase caseId, PatConfig &config) {
+    config.arch = ArchType::AArch64;
+    config.mode = caseId >= PeriodIALUNop ? WorkMode::PeriodTest : WorkMode::DelayTest;
+    config.args.iArg0 = 0;
+    config.args.iArg1 = 8;
+    if ((caseId >= SqrtLoad && caseId <= SqrtStoreUnknownVal) || (caseId >= InstLoad && caseId <= InstStore)) {
+        config.args.ptrArg0 = new size_t[0x1000000];
+        config.args.ptrArg0 = new size_t[0x1000000];
+    }
     switch (caseId) {
-    case SqrtCJmp:
-    case SqrtMixJmp:
-        // cmp x0, x0
-        inst[i++] = 0xeb00001f;
+    case InstNop:
+        config.di.delayPat.clear();
+        config.di.prologuePat.clear();
+        config.di.contentPat.push_back({0x1f, 0x20, 0x03, 0xd5}); // nop
+        config.di.epiloguePat.clear();
+        break;
+    case InstMov:
+        config.di.delayPat.clear();
+        config.di.prologuePat.clear();
+        config.di.contentPat.push_back({0xe0, 0x03, 0x01, 0xaa}); // mov x0, x1
+        config.di.epiloguePat.clear();
+        break;
+    case InstIALU:
+        config.di.delayPat.clear();
+        config.di.prologuePat.clear();
+        config.di.contentPat.push_back({0x20, 0x00, 0x01, 0x8b}); // add x0, x1, x1
+        config.di.epiloguePat.clear();
+        break;
+    case InstIALUChain:
+        config.di.delayPat.clear();
+        config.di.prologuePat.clear();
+        config.di.contentPat.push_back({0x00, 0x00, 0x01, 0x8b}); // add x0, x0, x1
+        config.di.epiloguePat.clear();
+        break;
+    case InstFALU:
+        config.di.delayPat.clear();
+        config.di.prologuePat.clear();
+        config.di.contentPat.push_back({0x01, 0xc0, 0x60, 0x1e}); // fabs d1, d0
+        config.di.epiloguePat.clear();
+        break;
+    case InstFALUChain:
+        config.di.delayPat.clear();
+        config.di.prologuePat.clear();
+        config.di.contentPat.push_back({0x00, 0xc0, 0x60, 0x1e}); // fabs d0, d0
+        config.di.epiloguePat.clear();
+        break;
+    case InstICmp:
+        config.di.delayPat.clear();
+        config.di.prologuePat.clear();
+        config.di.contentPat.push_back({0x1f, 0x00, 0x01, 0xeb}); // cmp x0, x1
+        config.di.epiloguePat.clear();
+        break;
+    case InstLea3:
+        return false;
+    case InstLea3Chain:
+        return false;
+    case InstLoad:
+        config.di.delayPat.clear();
+        config.di.prologuePat.clear();
+        config.di.contentPat.push_back({0x41, 0x00, 0x40, 0xf9}); // ldr x1, [x2]
+        config.di.epiloguePat.clear();
+        break;
+    case InstStore:
+        config.di.delayPat.clear();
+        config.di.prologuePat.clear();
+        config.di.contentPat.push_back({0x40, 0x00, 0x00, 0xf9}); // str x0, [x2]
+        config.di.epiloguePat.clear();
+        break;
+    case SqrtNop:
+        config.di.delayPat.push_back({0x00, 0xc0, 0x61, 0x1e}); // sqrt d0, d0
+        config.di.prologuePat.clear();
+        config.di.contentPat.push_back({0x1f, 0x20, 0x03, 0xd5}); // nop
+        config.di.epiloguePat.clear();
+        break;
+    case SqrtMov:
+        config.di.delayPat.push_back({0x00, 0xc0, 0x61, 0x1e}); // sqrt d0, d0
+        config.di.prologuePat.clear();
+        config.di.contentPat.push_back({0xe0, 0x03, 0x01, 0xaa}); // mov x0, x1
+        config.di.epiloguePat.clear();
+        break;
+    case SqrtMovSelf:
+        config.di.delayPat.push_back({0x00, 0xc0, 0x61, 0x1e}); // sqrt d0, d0
+        config.di.prologuePat.clear();
+        config.di.contentPat.push_back({0xe1, 0x03, 0x01, 0xaa}); // mov x1, x1
+        config.di.epiloguePat.clear();
+        break;
+    case SqrtMovSelfFp:
+        config.di.delayPat.push_back({0x41, 0x08, 0xc1, 0x9a}); // udiv x1, x2, x1
+        config.di.prologuePat.clear();
+        config.di.contentPat.push_back({0x21, 0x40, 0x60, 0x1e}); // fmov d1, d1
+        config.di.epiloguePat.clear();
+        break;
+    case SqrtIALU:
+        config.di.delayPat.push_back({0x00, 0xc0, 0x61, 0x1e}); // sqrt d0, d0
+        config.di.prologuePat.clear();
+        config.di.contentPat.push_back({0x20, 0x00, 0x01, 0x8b}); // add x0, x1, x1
+        config.di.epiloguePat.clear();
+        break;
+    case UdivVFALU:
+        config.di.delayPat.push_back({0x41, 0x08, 0xc1, 0x9a}); // udiv x1, x2, x1
+        config.di.prologuePat.clear();
+        config.di.contentPat.push_back({0x01, 0xc0, 0x60, 0x1e}); // fabs d1, d0
+        config.di.epiloguePat.clear();
+        break;
+    case SqrtICmp:
+        config.di.delayPat.push_back({0x00, 0xc0, 0x61, 0x1e}); // sqrt d0, d0
+        config.di.prologuePat.clear();
+        config.di.contentPat.push_back({0x1f, 0x00, 0x01, 0xeb}); // cmp x0, x1
+        config.di.epiloguePat.clear();
+        break;
+    case SqrtIALUICmp:
+        config.di.delayPat.push_back({0x00, 0xc0, 0x61, 0x1e}); // sqrt d0, d0
+        config.di.prologuePat.clear();
+        config.di.contentPat.push_back({0x20, 0x00, 0x01, 0x8b}); // add x0, x1, x1
+        config.di.contentPat.push_back({0x5f, 0x00, 0x03, 0xeb}); // cmp x2, x3
+        config.di.epiloguePat.clear();
+        break;
+    case SqrtIFALU:
+        config.di.delayPat.push_back({0x00, 0xc0, 0x61, 0x1e}); // sqrt d0, d0
+        config.di.prologuePat.clear();
+        config.di.contentPat.push_back({0x20, 0x00, 0x01, 0x8b}); // add x0, x1, x1
+        config.di.contentPat.push_back({0x01, 0xc0, 0x60, 0x1e}); // fabs d1, d0
+        config.di.epiloguePat.clear();
+        break;
+    case SqrtLoad:
+        config.di.delayPat.push_back({0x00, 0xc0, 0x61, 0x1e}); // sqrt d0, d0
+        config.di.prologuePat.clear();
+        config.di.contentPat.push_back({0x41, 0x00, 0x40, 0xf9}); // ldr x1, [x2]
+        config.di.epiloguePat.clear();
+        break;
+    case SqrtLoadSeq:
+        config.di.delayPat.push_back({0x00, 0xc0, 0x61, 0x1e}); // sqrt d0, d0
+        config.di.prologuePat.clear();
+        config.di.contentPat.push_back({0x41, 0x84, 0x40, 0xf8}); // ldr x1, [x2], 8
+        config.di.epiloguePat.clear();
         break;
     case SqrtLoadUnKnownAddr:
+        config.di.delayPat.push_back({0x00, 0xc0, 0x61, 0x1e});    // sqrt d0, d0
+        config.di.prologuePat.push_back({0x01, 0x00, 0x79, 0x9e}); // fcvtzu x1, d0
+        config.di.contentPat.push_back({0x40, 0x68, 0x61, 0xf8});  // ldr x0, [x2, x1]
+        config.di.epiloguePat.clear();
+        break;
+    case SqrtLoadChain:
+        config.di.delayPat.push_back({0x00, 0xc0, 0x61, 0x1e});    // sqrt d0, d0
+        config.di.prologuePat.push_back({0x42, 0x00, 0x00, 0xf9}); // str x2, [x2]
+        config.di.contentPat.push_back({0x42, 0x00, 0x40, 0xf9});  // ldr x2, [x2]
+        config.di.epiloguePat.clear();
+        break;
+    case SqrtStore:
+        config.di.delayPat.push_back({0x00, 0xc0, 0x61, 0x1e}); // sqrt d0, d0
+        config.di.prologuePat.clear();
+        config.di.contentPat.push_back({0x40, 0x00, 0x00, 0xf9}); // str x0, [x2]
+        config.di.epiloguePat.clear();
+        break;
+    case SqrtStoreSeq:
+        config.di.delayPat.push_back({0x00, 0xc0, 0x61, 0x1e}); // sqrt d0, d0
+        config.di.prologuePat.clear();
+        config.di.contentPat.push_back({0x40, 0x84, 0x00, 0xf8}); // str x0, [x2], 8
+        config.di.epiloguePat.clear();
+        break;
     case SqrtStoreUnknownAddr:
+        config.di.delayPat.push_back({0x00, 0xc0, 0x61, 0x1e});    // sqrt d0, d0
+        config.di.prologuePat.push_back({0x01, 0x00, 0x79, 0x9e}); // fcvtzu x1, d0
+        config.di.contentPat.push_back({0x40, 0x68, 0x21, 0xf8});  // str x0, [x2, x1]
+        config.di.epiloguePat.clear();
+        break;
     case SqrtStoreUnknownVal:
+        config.di.delayPat.push_back({0x00, 0xc0, 0x61, 0x1e});    // sqrt d0, d0
+        config.di.prologuePat.push_back({0x01, 0x00, 0x79, 0x9e}); // fcvtzu x1, d0
+        config.di.contentPat.push_back({0x41, 0x00, 0x00, 0xf9});  // str x1, [x2]
+        config.di.epiloguePat.clear();
+        break;
+    case SqrtCJmp:
+        config.di.delayPat.push_back({0x00, 0xc0, 0x61, 0x1e});    // sqrt d0, d0
+        config.di.prologuePat.push_back({0x1f, 0x00, 0x00, 0xeb}); // cmp x0, x0
+        config.di.contentPat.push_back({0x20, 0x00, 0x00, 0x54});  // b.eq .+4
+        config.di.epiloguePat.clear();
+        break;
+    case SqrtJmp:
+        config.di.delayPat.push_back({0x00, 0xc0, 0x61, 0x1e}); // sqrt d0, d0
+        config.di.prologuePat.clear();
+        config.di.contentPat.push_back({0x01, 0x00, 0x00, 0x14}); // b .+4
+        config.di.epiloguePat.clear();
+        break;
+    case SqrtMixJmp:
+        config.di.delayPat.push_back({0x00, 0xc0, 0x61, 0x1e});    // sqrt d0, d0
+        config.di.prologuePat.push_back({0x1f, 0x00, 0x00, 0xeb}); // cmp x0, x0
+        config.di.contentPat.push_back({0x20, 0x00, 0x00, 0x54});  // b.eq .+4
+        config.di.contentPat.push_back({0x01, 0x00, 0x00, 0x14});  // b .+4
+        config.di.epiloguePat.clear();
+        break;
+    case SqrtNopIALU:
+        config.di.delayPat.push_back({0x00, 0xc0, 0x61, 0x1e}); // sqrt d0, d0
+        config.di.prologuePat.clear();
+        config.di.contentPat.push_back({0x1f, 0x20, 0x03, 0xd5});    // nop
+        config.di.epiloguePat.push_back({{0x20, 0x00, 0x01, 0x8b}}); // add x0, x1, x1
+        break;
+    case SqrtVFALUIALU:
+        config.di.delayPat.push_back({0x00, 0xc0, 0x61, 0x1e}); // sqrt d0, d0
+        config.di.prologuePat.clear();
+        config.di.contentPat.push_back({0x01, 0xc0, 0x60, 0x1e});    // fabs d1, d0
+        config.di.epiloguePat.push_back({{0x20, 0x00, 0x01, 0x8b}}); // add x0, x1, x1
+        break;
     case SchSqrtIALUDep:
+        config.di.delayPat.push_back({0x00, 0xc0, 0x61, 0x1e});    // sqrt d0, d0
+        config.di.prologuePat.push_back({0x01, 0x00, 0x79, 0x9e}); // fcvtzu x1, d0
+        config.di.contentPat.push_back({0x20, 0x00, 0x01, 0x8b});  // add x0, x1, x1
+        config.di.epiloguePat.clear();
+        break;
     case SchSqrtIALUChainDep:
-        // fcvtzu x1, d0
-        inst[i++] = 0x9e790001;
+        config.di.delayPat.push_back({0x00, 0xc0, 0x61, 0x1e});    // sqrt d0, d0
+        config.di.prologuePat.push_back({0x01, 0x00, 0x79, 0x9e}); // fcvtzu x1, d0
+        config.di.contentPat.push_back({0x00, 0x00, 0x01, 0x8b});  // add x0, x0, x1
+        config.di.epiloguePat.clear();
         break;
     case SchSDivFALUDep:
+        config.di.delayPat.push_back({0x41, 0x0c, 0xc1, 0x9a});    // sdiv x1, x2, x1
+        config.di.prologuePat.push_back({0x20, 0x00, 0x62, 0x9e}); // scvtf d0, x1
+        config.di.contentPat.push_back({0x01, 0xc0, 0x60, 0x1e});  // fabs d1, d0
+        config.di.epiloguePat.clear();
+        break;
     case SchSDivFALUChainDep:
-        // scvtf d0, x1
-        inst[i++] = 0x9e620020;
+        config.di.delayPat.push_back({0x41, 0x0c, 0xc1, 0x9a});    // sdiv x1, x2, x1
+        config.di.prologuePat.push_back({0x20, 0x00, 0x62, 0x9e}); // scvtf d0, x1
+        config.di.contentPat.push_back({0x00, 0xc0, 0x60, 0x1e});  // fabs d0, d0
+        config.di.epiloguePat.clear();
+        break;
+    case SchIALUNop:
+        config.di.delayPat.push_back({0x20, 0x00, 0x01, 0x8b}); // add x0, x1, x1
+        config.di.prologuePat.clear();
+        config.di.contentPat.push_back({0x1f, 0x20, 0x03, 0xd5}); // nop
+        config.di.epiloguePat.clear();
+        break;
+    case SchIALUChainNop:
+        config.di.delayPat.push_back({0x00, 0x00, 0x01, 0x8b}); // add x0, x0, x1
+        config.di.prologuePat.clear();
+        config.di.contentPat.push_back({0x1f, 0x20, 0x03, 0xd5}); // nop
+        config.di.epiloguePat.clear();
+        break;
+    case SchICmpNop:
+        config.di.delayPat.push_back({0x1f, 0x00, 0x01, 0xeb}); // cmp x0, x1
+        config.di.prologuePat.clear();
+        config.di.contentPat.push_back({0x1f, 0x20, 0x03, 0xd5}); // nop
+        config.di.epiloguePat.clear();
+        break;
+    case SchFALUNop:
+        config.di.delayPat.push_back({0x01, 0xc0, 0x60, 0x1e}); // fabs d1, d0
+        config.di.prologuePat.clear();
+        config.di.contentPat.push_back({0x1f, 0x20, 0x03, 0xd5}); // nop
+        config.di.epiloguePat.clear();
+        break;
+    case SchFALUChainNop:
+        config.di.delayPat.push_back({0x00, 0xc0, 0x60, 0x1e}); // fabs d0, d0
+        config.di.prologuePat.clear();
+        config.di.contentPat.push_back({0x1f, 0x20, 0x03, 0xd5}); // nop
+        config.di.epiloguePat.clear();
+        break;
+    case PeriodIALUNop:
+        config.pi.periodPat.push_back({0x20, 0x00, 0x01, 0x8b}); // add x0, x1, x1
+        config.pi.fillPat.push_back({0x1f, 0x20, 0x03, 0xd5});   // nop
+        break;
+    case PeriodICmpNop:
+        config.pi.periodPat.push_back({0x1f, 0x00, 0x01, 0xeb}); // cmp x0, x1
+        config.pi.fillPat.push_back({0x1f, 0x20, 0x03, 0xd5});   // nop
+        break;
+    case PeriodFALUNop:
+        config.pi.periodPat.push_back({0x41, 0xc0, 0x20, 0x1e}); // fabs s1, s2
+        config.pi.fillPat.push_back({0x1f, 0x20, 0x03, 0xd5});   // nop
         break;
     default:
-        break;
-    }
-}
-
-static bool genContent(TestCase caseId, unsigned int *inst, int testCnt, int gp, unsigned &i) {
-    for (int j = 0; j < testCnt; j++) {
-        switch (caseId) {
-        case InstIALUChain:
-        case SchSqrtIALUChainDep:
-            inst[i++] = 0x8b010000; // add x0, x0, x1
-            break;
-        case InstFALUChain:
-        case SchSDivFALUChainDep:
-            inst[i++] = 0x1e60c000; // fabs d0, d0
-            break;
-        case InstNop:
-        case SqrtNop:
-        case SqrtNopIALU:
-        case SchIALUNop:
-        case SchIALUChainNop:
-        case SchICmpNop:
-        case SchFALUNop:
-        case SchFALUChainNop:
-            inst[i++] = 0xd503201f; // nop
-            break;
-        case InstMov:
-        case SqrtMov:
-            inst[i++] = 0xaa0103e0; // mov x0, x1
-            break;
-        case SqrtMovSelf:
-            inst[i++] = 0xaa0103e1; // mov x1, x1
-            break;
-        case SqrtMovSelfFp:
-            inst[i++] = 0x1e604021; // fmov d1, d1
-            break;
-        case InstIALU:
-        case SqrtIALU:
-        case SchSqrtIALUDep:
-            inst[i++] = 0x8b010020; // add x0, x1, x1
-            break;
-        case InstFALU:
-        case UdivVFALU:
-        case SqrtVFALUIALU:
-        case SchSDivFALUDep:
-            inst[i++] = 0x1e60c001; // fabs d1, d0
-        case InstICmp:
-        case SqrtICmp:
-            inst[i++] = 0xeb01001f; // cmp x0, x1
-            break;
-        case SqrtIALUICmp:
-            inst[i++] = 0x8b010020; // add x0, x1, x1
-            inst[i++] = 0xeb03005f; // cmp x2, x3
-            break;
-        case SqrtIFALU:
-            inst[i++] = 0x8b010020; // add x0, x1, x1
-            inst[i++] = 0x1e60c001; // fabs d1, d0
-            break;
-        case InstLoad:
-        case SqrtLoad:
-            inst[i++] = 0xf9400041; // ldr x1, [x2]
-            // inst[i++] = 0xa9400440; // ldp x0, x1, [x2]
-            break;
-        case SqrtLoadSeq:
-            inst[i++] = 0xf8408441; // ldr x1, [x2], 8
-            break;
-        case SqrtLoadUnKnownAddr:
-            inst[i++] = 0xf8616840; // ldr x0, [x2, x1]
-            break;
-        case SqrtLoadChain:
-            inst[i++] = 0xf9400042; // ldr x2, [x2]
-            break;
-        case InstStore:
-        case SqrtStore:
-            inst[i++] = 0xf9000040; // str x0, [x2]
-            break;
-        case SqrtStoreSeq:
-            inst[i++] = 0xf8008440; // str x0, [x2], 8
-            break;
-        case SqrtStoreUnknownAddr:
-            inst[i++] = 0xf8216840; // str x0, [x2, x1]
-            break;
-        case SqrtStoreUnknownVal:
-            inst[i++] = 0xf9000041; // str x1, [x2]
-            break;
-        case SqrtCJmp:
-            inst[i++] = 0x54000020; // b.eq .+4
-            break;
-        case SqrtJmp:
-            inst[i++] = 0x14000001; // b .+4
-            break;
-        case SqrtMixJmp:
-            inst[i++] = 0x54000020; // b.eq .+4
-            inst[i++] = 0x14000001; // b .+4
-            break;
-        default:
-            return false;
-        }
+        return false;
     }
     return true;
 }
 
-static void genEpilogue(TestCase caseId, unsigned int *inst, int gp, unsigned &i) {
-    if (caseId == SqrtNopIALU || caseId == SqrtVFALUIALU) {
-        for (int j = 0; j < gp; j++)
-            inst[i++] = 0x8b010020; // add x0, x1, x1
+static void genDelayPattern(PatConfig &config, unsigned int *inst, int delayCnt, unsigned &i) {
+    const std::vector<InstBytes> &insts = config.di.delayPat;
+    for (int j = 0; j < delayCnt; j++) {
+        for (auto inst : insts) {
+            inst[i++] = pair(inst[0], inst[1], inst[2], inst[3]);
+        }
     }
 }
 
-static bool genPeriodPattern(TestCase caseId, unsigned int *inst, int period, int instNum, int instThroughPut,
+static void genPrologue(PatConfig &config, unsigned int *inst, unsigned &i) {
+    const std::vector<InstBytes> &insts = config.di.prologuePat;
+    for (auto inst : insts) {
+        inst[i++] = pair(inst[0], inst[1], inst[2], inst[3]);
+    }
+}
+
+static void genContent(PatConfig &config, unsigned int *inst, int testCnt, unsigned &i) {
+    const std::vector<InstBytes> &insts = config.di.contentPat;
+    for (int j = 0; j < testCnt; j++) {
+        for (auto inst : insts) {
+            inst[i++] = pair(inst[0], inst[1], inst[2], inst[3]);
+        }
+    }
+}
+
+static void genEpilogue(PatConfig &config, unsigned int *inst, int gp, unsigned &i) {
+    const std::vector<InstBytes> &insts = config.di.epiloguePat;
+    for (int j = 0; j < gp; j++) {
+        for (auto inst : insts) {
+            inst[i++] = pair(inst[0], inst[1], inst[2], inst[3]);
+        }
+    }
+}
+
+static void genPeriodPattern(PatConfig &config, unsigned int *inst, int period, int instNum, int instThroughPut,
                              int nopThroughPut, unsigned &i) {
     int InstCnt = instThroughPut * period;
     int PeriodCnt = nopThroughPut * period;
+    const std::vector<InstBytes> &periodPat = config.pi.periodPat;
+    const std::vector<InstBytes> &fillPat = config.pi.fillPat;
     for (int j = 0, k = 0; j < instNum; j++) {
         if (k < InstCnt) {
-            switch (caseId) {
-            case PeriodIALUNop:
-                inst[i++] = 0x8b010020; // add x0, x1, x1
-                break;
-            case PeriodICmpNop:
-                inst[i++] = 0xeb01001f; // cmp x0, x1
-                break;
-            case PeriodFALUNop:
-                inst[i++] = 0x1e20c041; // fabs s1, s2
-                break;
-            default:
-                return false;
+            for (auto inst : periodPat) {
+                inst[i++] = pair(inst[0], inst[1], inst[2], inst[3]);
             }
         } else {
-            inst[i++] = 0xd503201f; // nop
+            for (auto inst : fillPat) {
+                inst[i++] = pair(inst[0], inst[1], inst[2], inst[3]);
+            }
         }
         k++;
         if (k >= PeriodCnt)
             k = 0;
     }
-    return true;
 }
 
-bool genPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayCnt, int codeDupCnt, int gp) {
+bool genPattern(PatConfig &config, unsigned char *instBuf, int testCnt, int delayCnt, int codeDupCnt, int gp) {
     unsigned i = 0;
     unsigned int *inst = (unsigned int *)instBuf;
     genCodeStart();
@@ -215,15 +355,14 @@ bool genPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
     //
     // v. https://github.com/ARM-software/abi-aa/blob/main/aapcs64/
     // Volatile registers: x0-x18, x30 (lr)
-    if (caseId >= PeriodIALUNop) {
-        genPeriodPattern(caseId, inst, testCnt, delayCnt, codeDupCnt, gp, i);
+    if (config.mode == WorkMode::PeriodTest) {
+        genPeriodPattern(config, inst, testCnt, delayCnt, codeDupCnt, gp, i);
     } else {
         for (int k = 0; k < codeDupCnt; k++) {
-            genDelayPattern(caseId, inst, delayCnt, i);
-            genPrologue(caseId, inst, i);
-            if (!genContent(caseId, inst, testCnt, gp, i))
-                return false;
-            genEpilogue(caseId, inst, gp, i);
+            genDelayPattern(config, inst, delayCnt, i);
+            genPrologue(config, inst, i);
+            genContent(config, inst, testCnt, i);
+            genEpilogue(config, inst, gp, i);
         }
     }
 

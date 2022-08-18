@@ -52,6 +52,7 @@ enum TestCase {
     PeriodIALUNop,      // Schedule Queue for Int Test4
     PeriodICmpNop,      // Schedule Queue for Int Test5
     PeriodFALUNop,      // Schedule Queue for Float Test3
+
     TestCaseEnd,
 };
 

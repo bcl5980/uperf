@@ -16,24 +16,25 @@
 
 #include "gen.h"
 
-bool runPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayCnt, int codeDupCnt, int codeLoopCnt,
-                size_t *data0, size_t *data1, int gp) {
-    if (!genPattern(caseId, instBuf, testCnt, delayCnt, codeDupCnt, gp))
-        return false;
+const unsigned JitMemorySize = 0x1000000;
 
-    size_t r0 = 0;
-    size_t r1 = 8;
-    size_t *r2 = data0;
-    size_t *r3 = data1;
+bool runPattern(PatConfig &config, unsigned char *instBuf, int testCnt, int delayCnt, int codeDupCnt, int codeLoopCnt,
+                int gp) {
+    genPattern(config, instBuf, testCnt, delayCnt, codeDupCnt, gp);
+
+    size_t r0 = config.args.iArg0;
+    size_t r1 = config.args.iArg1;
+    void *r2 = config.args.ptrArg0;
+    void *r3 = config.args.ptrArg1;
     // __debugbreak();
     // warm icache
-    ((size_t(*)(size_t, size_t, size_t *, size_t *))instBuf)(r0, r1, r2, r3);
+    ((size_t(*)(size_t, size_t, void *, void *))instBuf)(r0, r1, r2, r3);
 
     size_t min = -1ull;
     for (int k = 0; k < 10; k++) {
         size_t start = getclock();
         for (int i = 0; i < codeLoopCnt; i++) {
-            ((size_t(*)(size_t, size_t, size_t *, size_t *))instBuf)(r0, r1, r2, r3);
+            ((size_t(*)(size_t, size_t, void *, void *))instBuf)(r0, r1, r2, r3);
         }
         size_t end = getclock();
         size_t clock = end - start;
@@ -42,7 +43,7 @@ bool runPattern(TestCase caseId, unsigned char *instBuf, int testCnt, int delayC
     }
 
     int codeExecCnt;
-    if (caseId >= PeriodIALUNop)
+    if (config.mode == WorkMode::PeriodTest)
         codeExecCnt = codeLoopCnt;
     else
         codeExecCnt = codeLoopCnt * codeDupCnt;
@@ -59,7 +60,8 @@ int main(int argc, char *argv[]) {
     int codeLoopCnt = 1000;
     int gp = 160;
     TestCase caseId = InstNop;
-    PatConfig config;
+    PatConfig config = {};
+    bool configFromFile = false;
 
     for (int i = 1; i < argc; i += 2) {
         if (strcmp(argv[i], "-case") == 0)
@@ -78,9 +80,13 @@ int main(int argc, char *argv[]) {
             codeLoopCnt = atoi(argv[i + 1]);
         else if (strcmp(argv[i], "-gp") == 0)
             gp = atoi(argv[i + 1]);
-        else if (strcmp(argv[i], "-f") == 0)
-            parseConfig(config, argv[i + 1]);
-        else {
+        else if (strcmp(argv[i], "-f") == 0) {
+            configFromFile = true;
+            if (!parseConfig(config, argv[i + 1])) {
+                printf("Config file parse failed\n");
+                return 1;
+            }
+        } else {
             printf("caseId                          case Name    case Parameter\n");
             for (int i = 0; i < TestCaseEnd; i++) {
                 printf("%2d, %36s,    %s\n", i, TestCaseName[i], TestCaseGP[i]);
@@ -107,38 +113,33 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
+    if (!configFromFile && !genConfigForDefaultCases(caseId, config))
+        return 1;
+
     if (!procInit(0x01))
         return 1;
 
     if (caseId < SqrtNop)
         delayCnt = 0;
+
     printf("case: %s\ndelayCnt:%d codeDupCnt:%d, codeLoopCnt:%d\n", TestCaseName[caseId], delayCnt, codeDupCnt,
            codeLoopCnt);
-    unsigned char *code = allocVM(0x1001000);
-    unsigned char *instBuf = (unsigned char *)((size_t)(code + 0xfff) & (~0xfff));
-    fillnop(instBuf, 0x1000000);
-
-    size_t *data0 = nullptr;
-    size_t *data1 = nullptr;
-    if ((caseId >= SqrtLoad && caseId <= SqrtStoreUnknownVal) || (caseId >= InstLoad && caseId <= InstStore)) {
-        data0 = new size_t[0x1000000];
-        data1 = new size_t[0x1000000];
-        data0[0] = (size_t)data0;
-        data1[0] = (size_t)data1;
-    }
+    unsigned char *instBuf = allocVM(JitMemorySize);
+    fillnop(instBuf, JitMemorySize);
 
     for (int testCnt = testBase; testCnt < testEnd; testCnt += testStep) {
         printf("%d ", testCnt);
-        if (!runPattern(caseId, instBuf, testCnt, delayCnt, codeDupCnt, codeLoopCnt, data0, data1, gp)) {
+        if (!runPattern(config, instBuf, testCnt, delayCnt, codeDupCnt, codeLoopCnt, gp)) {
             printf("current test case is not support on the platform\n");
             return 1;
         }
         printf("\n");
     }
-    freeVM(code, 0x1001000);
-    if (data0)
-        delete[] data0;
-    if (data1)
-        delete[] data1;
+    freeVM(instBuf, JitMemorySize);
+    if (config.args.ptrArg0)
+        free(config.args.ptrArg0);
+    if (config.args.ptrArg1)
+        free(config.args.ptrArg1);
+
     return 0;
 }
