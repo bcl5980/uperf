@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "osutils.h"
+#include "pat_config.h"
 
 // Oline compiler
 // https://godbolt.org/
@@ -58,6 +59,7 @@ int main(int argc, char *argv[]) {
     int codeLoopCnt = 1000;
     int gp = 160;
     TestCase caseId = InstNop;
+    PatConfig config;
 
     for (int i = 1; i < argc; i += 2) {
         if (strcmp(argv[i], "-case") == 0)
@@ -76,6 +78,8 @@ int main(int argc, char *argv[]) {
             codeLoopCnt = atoi(argv[i + 1]);
         else if (strcmp(argv[i], "-gp") == 0)
             gp = atoi(argv[i + 1]);
+        else if (strcmp(argv[i], "-f") == 0)
+            parseConfig(config, argv[i + 1]);
         else {
             printf("caseId                          case Name    case Parameter\n");
             for (int i = 0; i < TestCaseEnd; i++) {
