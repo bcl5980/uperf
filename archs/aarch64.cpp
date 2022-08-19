@@ -140,7 +140,7 @@ bool genConfigForDefaultCases(TestCase caseId, PatConfig &config) {
     case InstIALU:
         config.di.delayPat.clear();
         config.di.prologuePat.clear();
-        config.di.contentPat.push_back({0x20, 0x00, 0x01, 0x8b}); // add x0, x1, x1
+        config.di.contentPat.push_back({0x20, 0x00, 0x40, 0x92}); // add x0, x1, 1
         config.di.epiloguePat.clear();
         break;
     case InstIALUChain:
@@ -210,7 +210,7 @@ bool genConfigForDefaultCases(TestCase caseId, PatConfig &config) {
     case SqrtIALU:
         config.di.delayPat.push_back({0x00, 0xc0, 0x61, 0x1e}); // sqrt d0, d0
         config.di.prologuePat.clear();
-        config.di.contentPat.push_back({0x20, 0x00, 0x01, 0x8b}); // add x0, x1, x1
+        config.di.contentPat.push_back({0x20, 0x00, 0x40, 0x92}); // add x0, x1, 1
         config.di.epiloguePat.clear();
         break;
     case UdivVFALU:
@@ -228,14 +228,14 @@ bool genConfigForDefaultCases(TestCase caseId, PatConfig &config) {
     case SqrtIALUICmp:
         config.di.delayPat.push_back({0x00, 0xc0, 0x61, 0x1e}); // sqrt d0, d0
         config.di.prologuePat.clear();
-        config.di.contentPat.push_back({0x20, 0x00, 0x01, 0x8b}); // add x0, x1, x1
+        config.di.contentPat.push_back({0x20, 0x00, 0x40, 0x92}); // add x0, x1, 1
         config.di.contentPat.push_back({0x5f, 0x00, 0x03, 0xeb}); // cmp x2, x3
         config.di.epiloguePat.clear();
         break;
     case SqrtIFALU:
         config.di.delayPat.push_back({0x00, 0xc0, 0x61, 0x1e}); // sqrt d0, d0
         config.di.prologuePat.clear();
-        config.di.contentPat.push_back({0x20, 0x00, 0x01, 0x8b}); // add x0, x1, x1
+        config.di.contentPat.push_back({0x20, 0x00, 0x40, 0x92}); // add x0, x1, 1
         config.di.contentPat.push_back({0x01, 0xc0, 0x60, 0x1e}); // fabs d1, d0
         config.di.epiloguePat.clear();
         break;
@@ -310,18 +310,18 @@ bool genConfigForDefaultCases(TestCase caseId, PatConfig &config) {
         config.di.delayPat.push_back({0x00, 0xc0, 0x61, 0x1e}); // sqrt d0, d0
         config.di.prologuePat.clear();
         config.di.contentPat.push_back({0x1f, 0x20, 0x03, 0xd5});    // nop
-        config.di.epiloguePat.push_back({{0x20, 0x00, 0x01, 0x8b}}); // add x0, x1, x1
+        config.di.epiloguePat.push_back({{0x20, 0x00, 0x40, 0x92}}); // add x0, x1, 1
         break;
     case SqrtVFALUIALU:
         config.di.delayPat.push_back({0x00, 0xc0, 0x61, 0x1e}); // sqrt d0, d0
         config.di.prologuePat.clear();
         config.di.contentPat.push_back({0x01, 0xc0, 0x60, 0x1e});    // fabs d1, d0
-        config.di.epiloguePat.push_back({{0x20, 0x00, 0x01, 0x8b}}); // add x0, x1, x1
+        config.di.epiloguePat.push_back({{0x20, 0x00, 0x40, 0x92}}); // add x0, x1, 1
         break;
     case SchSqrtIALUDep:
         config.di.delayPat.push_back({0x00, 0xc0, 0x61, 0x1e});    // sqrt d0, d0
         config.di.prologuePat.push_back({0x01, 0x00, 0x79, 0x9e}); // fcvtzu x1, d0
-        config.di.contentPat.push_back({0x20, 0x00, 0x01, 0x8b});  // add x0, x1, x1
+        config.di.contentPat.push_back({0x20, 0x00, 0x40, 0x92});  // add x0, x1, 1
         config.di.epiloguePat.clear();
         break;
     case SchSqrtIALUChainDep:
@@ -343,7 +343,7 @@ bool genConfigForDefaultCases(TestCase caseId, PatConfig &config) {
         config.di.epiloguePat.clear();
         break;
     case SchIALUNop:
-        config.di.delayPat.push_back({0x20, 0x00, 0x01, 0x8b}); // add x0, x1, x1
+        config.di.delayPat.push_back({0x20, 0x00, 0x40, 0x92}); // add x0, x1, 1
         config.di.prologuePat.clear();
         config.di.contentPat.push_back({0x1f, 0x20, 0x03, 0xd5}); // nop
         config.di.epiloguePat.clear();
@@ -373,7 +373,7 @@ bool genConfigForDefaultCases(TestCase caseId, PatConfig &config) {
         config.di.epiloguePat.clear();
         break;
     case PeriodIALUNop:
-        config.pi.periodPat.push_back({0x20, 0x00, 0x01, 0x8b}); // add x0, x1, x1
+        config.pi.periodPat.push_back({0x20, 0x00, 0x40, 0x92}); // add x0, x1, 1
         config.pi.fillPat.push_back({0x1f, 0x20, 0x03, 0xd5});   // nop
         break;
     case PeriodICmpNop:
