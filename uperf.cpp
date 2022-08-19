@@ -65,54 +65,6 @@ const char *TestCaseName[TestCaseEnd] = {
     "Period FALU + Nop",
 };
 
-const char *TestCaseGP[TestCaseEnd] = {
-    "None",
-    "None",
-    "None",
-    "None",
-    "None",
-    "None",
-    "None",
-    "None",
-    "None",
-    "None",
-    "None",
-    "None",
-    "None",
-    "None",
-    "None",
-    "None",
-    "None",
-    "None",
-    "None",
-    "None",
-    "None",
-    "None",
-    "None",
-    "None",
-    "None",
-    "None",
-    "None",
-    "None",
-    "None",
-    "None",
-    "None",
-    "Int physical register size",
-    "Int physical register size",
-    "None",
-    "None",
-    "None",
-    "None",
-    "None",
-    "None",
-    "None",
-    "None",
-    "None",
-    "Renaming Throughput",
-    "Renaming Throughput",
-    "Renaming Throughput",
-};
-
 bool runPattern(PatConfig &config, unsigned char *instBuf, TestParam &param, unsigned testCnt) {
     genPattern(config, instBuf, param, testCnt);
 
@@ -175,9 +127,9 @@ bool parseArgs(int argc, char *argv[], TestParam &param, TestCase &caseId, PatCo
             }
             configFileIdx = i + 1;
         } else {
-            printf("caseId                          case Name    case Parameter\n");
+            printf("caseId                          case Name\n");
             for (int i = 0; i < TestCaseEnd; i++) {
-                printf("%2d, %36s,    %s\n", i, TestCaseName[i], TestCaseGP[i]);
+                printf("%2d, %36s\n", i, TestCaseName[i]);
             }
 
             printf("DelayMode:\n"
@@ -204,9 +156,9 @@ bool parseArgs(int argc, char *argv[], TestParam &param, TestCase &caseId, PatCo
 
     if (configFileIdx < 0) {
         if ((caseId < 0 || caseId >= TestCaseEnd)) {
-            printf("caseId                          case Name    case Parameter\n");
+            printf("caseId                          case Name\n");
             for (int i = 0; i < TestCaseEnd; i++) {
-                printf("%2d, %36s,    %s\n", i, TestCaseName[i], TestCaseGP[i]);
+                printf("%2d, %36s\n", i, TestCaseName[i]);
             }
             return false;
         }
