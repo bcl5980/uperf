@@ -40,7 +40,6 @@ enum TestCase {
     SqrtNopIALU,          // Test ROB NOP retire speed, rob clear nop speed
     SqrtVFALUIALU,        // Test ROB register retire speed
 
-    // @todo: add x86 support
     SchSqrtIALUDep,      // Sqrt Result is IALU input
     SchSqrtIALUChainDep, // Sqrt Result is IALU chain input
     SchSDivFALUDep,      // Sdiv result is FALU input

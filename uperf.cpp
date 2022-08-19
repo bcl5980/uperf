@@ -41,7 +41,7 @@ const char *TestCaseName[TestCaseEnd] = {
     "Sqrt Delay + Load Same Addr",
     "Sqrt Delay + Load Linear Addr",
     "Sqrt Delay + Load Unknown Addr",
-    "Sqrt Dealy + Load Chain Addr",
+    "Sqrt Delay + Load Chain Addr",
     "Sqrt Delay + Store Same Addr",
     "Sqrt Delay + Store Linear Addr",
     "Sqrt Delay + Store Unknown Addr",

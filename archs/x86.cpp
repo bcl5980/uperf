@@ -304,7 +304,7 @@ bool genConfigForDefaultCases(TestCase caseId, PatConfig &config) {
         config.di.epiloguePat.clear();
         break;
     case PeriodIALUNop:
-        config.pi.periodPat.push_back({0x48, 0x83, 0xC0, 0x04}); // add rax, 4
+        config.pi.periodPat.push_back({0x48, 0x8D, 0x41, 0x04}); // lea rax, [rcx+4]
         config.pi.fillPat.push_back({0x90});                     // nop
         break;
     case PeriodICmpNop:
