@@ -234,7 +234,7 @@ int main(int argc, char *argv[]) {
         return 1;
 
     unsigned char *instBuf = allocVM(JitMemorySize);
-    fillnop(instBuf, JitMemorySize);
+    fillNop(instBuf, JitMemorySize);
 
     for (unsigned testCnt = param.begin; testCnt < param.end; testCnt += param.step) {
         printf("%d ", testCnt);

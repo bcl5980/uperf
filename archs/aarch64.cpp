@@ -315,7 +315,7 @@ bool genConfigForDefaultCases(TestCase caseId, PatConfig &config) {
     return true;
 }
 
-void fillnop(unsigned char *instBuf, unsigned sizeBytes) {
+void fillNop(unsigned char *instBuf, unsigned sizeBytes) {
     genCodeStart();
     unsigned nopCnt = sizeBytes / 4;
     unsigned *inst = (unsigned *)instBuf;
