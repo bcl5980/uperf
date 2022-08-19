@@ -140,13 +140,9 @@ bool runPattern(PatConfig &config, unsigned char *instBuf, TestParam &param, uns
     return true;
 }
 
-int main(int argc, char *argv[]) {
-    TestParam param;
-    TestCase caseId = SqrtNop;
-    PatConfig config = {};
+bool parseArgs(int argc, char *argv[], TestParam &param, TestCase &caseId, PatConfig &config,
+               unsigned &affinity) {
     int configFileIdx = -1;
-    unsigned affinity = 1;
-
     for (int i = 1; i < argc; i += 2) {
         if (strcmp(argv[i], "-case") == 0)
             caseId = static_cast<TestCase>(atoi(argv[i + 1]));
@@ -175,7 +171,7 @@ int main(int argc, char *argv[]) {
         else if (strcmp(argv[i], "-f") == 0) {
             if (!parseConfig(config, argv[i + 1])) {
                 printf("Config file parse failed\n");
-                return 1;
+                return false;
             }
             configFileIdx = i + 1;
         } else {
@@ -202,7 +198,7 @@ int main(int argc, char *argv[]) {
                    "      -thrput_fill 8     \n\n"
                    "      -loop       1000   \n"
                    "      -affinity   1      \n");
-            return 0;
+            return false;
         }
     }
 
@@ -212,23 +208,45 @@ int main(int argc, char *argv[]) {
             for (int i = 0; i < TestCaseEnd; i++) {
                 printf("%2d, %36s,    %s\n", i, TestCaseName[i], TestCaseGP[i]);
             }
-            return 0;
+            return false;
         }
 
         if (caseId < SqrtNop)
             param.delayCnt = 0;
 
         if (!genConfigForDefaultCases(caseId, config))
-            return 1;
+            return false;
 
-        printf("affinity:0x%x, case: %s\ndelay:%d, prologue:%d, epilogue:%d, loop:%d\n", affinity,
-               TestCaseName[caseId], param.delayCnt, param.prologueCnt, param.epilogueCnt,
-               param.loopCnt);
+        printf("affinity:0x%x, loop: %d, case: %s\n", affinity, param.loopCnt,
+               TestCaseName[caseId]);
     } else {
-        printf("affinity:0x%x, configfile: %s\ndelay:%d, prologue:%d, epilogue:%d, loop:%d\n",
-               affinity, argv[configFileIdx], param.delayCnt, param.prologueCnt, param.epilogueCnt,
-               param.loopCnt);
+        printf("affinity:0x%x, loop: %d, configfile: %s\n", affinity, param.loopCnt,
+               argv[configFileIdx]);
     }
+
+    if (config.mode == WorkMode::DelayTest) {
+        if (config.di.delayPat.size())
+            printf("delayCnt:%d ", param.delayCnt);
+        if (config.di.prologuePat.size())
+            printf("prologueCnt:%d ", param.prologueCnt);
+        if (config.di.epiloguePat.size())
+            printf("epilogueCnt:%d ", param.epilogueCnt);
+    } else if (config.mode == WorkMode::PeriodTest) {
+        printf("instNum:%d test inst throughput:%d, fill inst throughput:%d", param.instNum,
+               param.testInstTP, param.fillInstTP);
+    }
+    printf("\n");
+    return true;
+}
+
+int main(int argc, char *argv[]) {
+    TestParam param;
+    TestCase caseId = SqrtNop;
+    PatConfig config = {};
+    unsigned affinity = 1;
+
+    if (!parseArgs(argc, argv, param, caseId, config, affinity))
+        return 0;
 
     if (!procInit(affinity))
         return 1;
@@ -244,6 +262,7 @@ int main(int argc, char *argv[]) {
         }
         printf("\n");
     }
+
     freeVM(instBuf, JitMemorySize);
     if (config.args.ptrArg0)
         free(config.args.ptrArg0);
