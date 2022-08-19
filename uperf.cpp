@@ -125,9 +125,9 @@ bool runPattern(PatConfig &config, unsigned char *instBuf, TestParam &param, uns
     ((size_t(*)(size_t, size_t, void *, void *))instBuf)(r0, r1, r2, r3);
 
     size_t min = -1;
-    for (int k = 0; k < 10; k++) {
+    for (unsigned k = 0; k < 10; k++) {
         size_t start = getclock();
-        for (int i = 0; i < param.loopCnt; i++) {
+        for (unsigned i = 0; i < param.loopCnt; i++) {
             ((size_t(*)(size_t, size_t, void *, void *))instBuf)(r0, r1, r2, r3);
         }
         size_t end = getclock();

@@ -32,6 +32,9 @@ string trim(const string &s) {
 
     string::const_iterator end;
     size_t comment = s.find("//");
+    if (comment == 0)
+        return "";
+
     if (comment != string::npos)
         end = start + comment - 1;
     else
@@ -91,7 +94,7 @@ static bool parseArgs(ifstream &is, const string &line, PatConfig &config) {
     string newLine;
     std::streampos RollBackPos = is.tellg();
     unsigned argCount = 0;
-    while (std::getline(is, newLine) || argCount == 4) {
+    while (argCount < 4 && std::getline(is, newLine)) {
         string arg = trim(newLine);
         if (arg.find(':') != string::npos)
             break;
