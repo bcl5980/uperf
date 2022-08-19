@@ -1,87 +1,10 @@
 #if defined(__aarch64__) || defined(_M_ARM64)
-#include "arch.h"
+#include "archbase.h"
 #include "osutils.h"
-#include "uperf.h"
 #include <vector>
 
-inline unsigned pair(unsigned char a0, unsigned char a1, unsigned char a2, unsigned char a3) {
-    return ((unsigned)a3 << 24) | ((unsigned)a2 << 16) | ((unsigned)a1 << 8) | a0;
-}
-
-static void genDelayPattern(PatConfig &config, unsigned *inst, unsigned delayCnt, unsigned &i) {
-    const std::vector<InstBytes> &insts = config.di.delayPat;
-    if (insts.empty())
-        return;
-
-    for (unsigned j = 0; j < delayCnt; j++) {
-        for (auto ii : insts) {
-            inst[i++] = pair(ii[0], ii[1], ii[2], ii[3]);
-        }
-    }
-}
-
-static void genPrologue(PatConfig &config, unsigned *inst, unsigned instCnt, unsigned &i) {
-    const std::vector<InstBytes> &insts = config.di.prologuePat;
-    if (insts.empty())
-        return;
-
-    for (unsigned j = 0; j < instCnt; j++) {
-
-        for (auto ii : insts) {
-            inst[i++] = pair(ii[0], ii[1], ii[2], ii[3]);
-        }
-    }
-}
-
-static void genContent(PatConfig &config, unsigned *inst, unsigned testCnt, unsigned &i) {
-    const std::vector<InstBytes> &insts = config.di.contentPat;
-    if (insts.empty())
-        return;
-
-    for (unsigned j = 0; j < testCnt; j++) {
-        for (auto ii : insts) {
-            inst[i++] = pair(ii[0], ii[1], ii[2], ii[3]);
-        }
-    }
-}
-
-static void genEpilogue(PatConfig &config, unsigned *inst, unsigned gp, unsigned &i) {
-    const std::vector<InstBytes> &insts = config.di.epiloguePat;
-    if (insts.empty())
-        return;
-
-    for (unsigned j = 0; j < gp; j++) {
-        for (auto ii : insts) {
-            inst[i++] = pair(ii[0], ii[1], ii[2], ii[3]);
-        }
-    }
-}
-
-static void genPeriodPattern(PatConfig &config, unsigned *inst, unsigned period, unsigned instNum,
-                             unsigned instThroughPut, unsigned nopThroughPut, unsigned &i) {
-    unsigned InstCnt = instThroughPut * period;
-    unsigned PeriodCnt = nopThroughPut * period;
-    const std::vector<InstBytes> &periodPat = config.pi.periodPat;
-    const std::vector<InstBytes> &fillPat = config.pi.fillPat;
-    for (unsigned j = 0, k = 0; j < instNum; j++) {
-        if (k < InstCnt) {
-            for (auto ii : periodPat) {
-                inst[i++] = pair(ii[0], ii[1], ii[2], ii[3]);
-            }
-        } else {
-            for (auto ii : fillPat) {
-                inst[i++] = pair(ii[0], ii[1], ii[2], ii[3]);
-            }
-        }
-        k++;
-        if (k >= PeriodCnt)
-            k = 0;
-    }
-}
-
 bool genPattern(PatConfig &config, unsigned char *instBuf, TestParam &param, unsigned testCnt) {
-    unsigned i = 0;
-    unsigned *inst = (unsigned *)instBuf;
+    size_t i = 0;
     genCodeStart();
 
     // Microsft AARCH64 calling convention:
@@ -98,19 +21,21 @@ bool genPattern(PatConfig &config, unsigned char *instBuf, TestParam &param, uns
     // v. https://github.com/ARM-software/abi-aa/blob/main/aapcs64/
     // Volatile registers: x0-x18, x30 (lr)
     if (config.mode == WorkMode::PeriodTest) {
-        genPeriodPattern(config, inst, testCnt, param.instNum, param.testInstTP, param.fillInstTP,
-                         i);
+        genPeriodPattern(config, instBuf, testCnt, param.instNum, param.testInstTP,
+                         param.fillInstTP, i);
     } else {
-        genDelayPattern(config, inst, param.delayCnt, i);
-        genPrologue(config, inst, param.prologueCnt, i);
-        genContent(config, inst, testCnt, i);
-        genEpilogue(config, inst, param.epilogueCnt, i);
+        genDelayPattern(config.di.delayPat, instBuf, param.delayCnt, i);
+        genDelayPattern(config.di.prologuePat, instBuf, param.prologueCnt, i);
+        genDelayPattern(config.di.contentPat, instBuf, testCnt, i);
+        genDelayPattern(config.di.epiloguePat, instBuf, param.epilogueCnt, i);
     }
 
-    // ret 0xd65f03c0
-    inst[i++] = 0xd65f03c0;
+    instBuf[i++] = 0xc0;
+    instBuf[i++] = 0x03;
+    instBuf[i++] = 0x5f;
+    instBuf[i++] = 0xd6;
 
-    genCodeEnd(inst, i * sizeof(unsigned));
+    genCodeEnd(instBuf, i);
     return true;
 }
 
