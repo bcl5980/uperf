@@ -123,7 +123,7 @@ bool genConfigForDefaultCases(TestCase caseId, PatConfig &config) {
         config.di.epiloguePat.clear();
         break;
     case SqrtMovSelfFp:
-        config.args.iArg0 = 7; // rcx = 7;
+        config.args.iArg0 = 7;                            // rcx = 7;
         config.di.delayPat.push_back({0x48, 0x31, 0xD2}); // xor rdx,rdx;
         config.di.delayPat.push_back({0x48, 0xF7, 0xF1}); // div rcx
         config.di.prologuePat.clear();
@@ -137,7 +137,7 @@ bool genConfigForDefaultCases(TestCase caseId, PatConfig &config) {
         config.di.epiloguePat.clear();
         break;
     case UdivVFALU:
-        config.args.iArg0 = 7; // rcx = 7;
+        config.args.iArg0 = 7;                            // rcx = 7;
         config.di.delayPat.push_back({0x48, 0x31, 0xD2}); // xor rdx,rdx;
         config.di.delayPat.push_back({0x48, 0xF7, 0xF1}); // div rcx
         config.di.prologuePat.clear();
@@ -258,7 +258,7 @@ bool genConfigForDefaultCases(TestCase caseId, PatConfig &config) {
         config.di.epiloguePat.clear();
         break;
     case SchSDivFALUDep:
-        config.args.iArg0 = 7; // rcx = 7;
+        config.args.iArg0 = 7;                                           // rcx = 7;
         config.di.delayPat.push_back({0x48, 0x31, 0xD2});                // xor rdx,rdx
         config.di.delayPat.push_back({0x48, 0xF7, 0xF9});                // idiv rcx
         config.di.prologuePat.push_back({0xF2, 0x48, 0x0F, 0x2A, 0xC8}); // cvtsi2sd xmm1,rax
@@ -266,7 +266,7 @@ bool genConfigForDefaultCases(TestCase caseId, PatConfig &config) {
         config.di.epiloguePat.clear();
         break;
     case SchSDivFALUChainDep:
-        config.args.iArg0 = 7; // rcx = 7;
+        config.args.iArg0 = 7;                                           // rcx = 7;
         config.di.delayPat.push_back({0x48, 0x31, 0xD2});                // xor rdx,rdx
         config.di.delayPat.push_back({0x48, 0xF7, 0xF9});                // idiv rcx
         config.di.prologuePat.push_back({0xF2, 0x48, 0x0F, 0x2A, 0xC8}); // cvtsi2sd xmm1,rax
