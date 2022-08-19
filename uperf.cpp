@@ -145,6 +145,7 @@ int main(int argc, char *argv[]) {
     TestCase caseId = SqrtNop;
     PatConfig config = {};
     int configFileIdx = -1;
+    unsigned affinity = 1;
 
     for (int i = 1; i < argc; i += 2) {
         if (strcmp(argv[i], "-case") == 0)
@@ -169,6 +170,8 @@ int main(int argc, char *argv[]) {
             param.testInstTP = atoi(argv[i + 1]);
         else if (strcmp(argv[i], "-thrput_fill") == 0)
             param.fillInstTP = atoi(argv[i + 1]);
+        else if (strcmp(argv[i], "-affinity") == 0)
+            affinity = atoi(argv[i + 1]);
         else if (strcmp(argv[i], "-f") == 0) {
             if (!parseConfig(config, argv[i + 1])) {
                 printf("Config file parse failed\n");
@@ -182,14 +185,13 @@ int main(int argc, char *argv[]) {
             }
 
             printf("DelayMode:\n"
-                   "uperf -case       14    \n"
+                   "uperf -case       14   \n"
                    "      -start      100  \n"
                    "      -end        1000 \n"
                    "      -step       10   \n"
                    "      -delay      8    \n"
                    "      -prologue   1    \n"
                    "      -epilogue   160  \n"
-                   "      -loop       1000 \n\n"
                    "PeriodMode:\n"
                    "uperf -case        42    \n"
                    "      -start       1     \n"
@@ -197,8 +199,9 @@ int main(int argc, char *argv[]) {
                    "      -step        1     \n"
                    "      -inst_num    10000 \n"
                    "      -thrput_inst 6     \n"
-                   "      -thrput_fill 8     \n"
-                   "      -loop        1000  \n");
+                   "      -thrput_fill 8     \n\n"
+                   "      -loop       1000   \n"
+                   "      -affinity   1      \n");
             return 0;
         }
     }
@@ -225,7 +228,7 @@ int main(int argc, char *argv[]) {
                param.loopCnt);
     }
 
-    if (!procInit(0x01))
+    if (!procInit(affinity))
         return 1;
 
     unsigned char *instBuf = allocVM(JitMemorySize);
