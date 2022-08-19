@@ -254,7 +254,7 @@ bool genConfigForDefaultCases(TestCase caseId, PatConfig &config) {
     case SchSqrtIALUChainDep:
         config.di.delayPat.push_back({0xF2, 0x0F, 0x51, 0xC0});          // sqrtsd xmm0,xmm0
         config.di.prologuePat.push_back({0xF2, 0x48, 0x0F, 0x2C, 0xC8}); // cvttsd2si rcx,xmm0
-        config.di.contentPat.push_back({0x48, 0x8D, 0x41, 0x04});        // lea rax, [rcx+4]
+        config.di.contentPat.push_back({0x48, 0x83, 0xC0, 0x04});        // add rax, 4
         config.di.epiloguePat.clear();
         break;
     case SchSDivFALUDep:
