@@ -16,7 +16,6 @@ enum TestCase {
     InstLea3Chain, // x86 only
     InstLoad,
     InstStore,
-
     SqrtNop,              // ROB Size
     SqrtMov,              // Check Zero Move feature
     SqrtMovSelf,          // Check Move Self Opt & Physical Reg Size
@@ -39,17 +38,15 @@ enum TestCase {
     SqrtMixJmp,           // Check if Jump and Condition Jump share or not
     SqrtNopIALU,          // Test ROB NOP retire speed, rob clear nop speed
     SqrtVFALUIALU,        // Test ROB register retire speed
-
-    SchSqrtIALUDep,      // Sqrt Result is IALU input
-    SchSqrtIALUChainDep, // Sqrt Result is IALU chain input
-    SchSDivFALUDep,      // Sdiv result is FALU input
-    SchSDivFALUChainDep, // Sdiv result is FALU chain input
-
-    SchIALUNop,      // Schedule Queue for Int Test1
-    SchIALUChainNop, // Schedule Queue for Int Test2
-    SchICmpNop,      // Schedule Queue for Int Test3
-    SchFALUNop,      // Schedule Queue for Float Test1
-    SchFALUChainNop, // Schedule Queue for Float Test2
+    SchSqrtIALUDep,       // Sqrt Result is IALU input
+    SchSqrtIALUChainDep,  // Sqrt Result is IALU chain input
+    SchSDivFALUDep,       // Sdiv result is FALU input
+    SchSDivFALUChainDep,  // Sdiv result is FALU chain input
+    SchIALUNop,           // Schedule Queue for Int Test1
+    SchIALUChainNop,      // Schedule Queue for Int Test2
+    SchICmpNop,           // Schedule Queue for Int Test3
+    SchFALUNop,           // Schedule Queue for Float Test1
+    SchFALUChainNop,      // Schedule Queue for Float Test2
 
     PeriodIALUNop, // Schedule Queue for Int Test4
     PeriodICmpNop, // Schedule Queue for Int Test5
