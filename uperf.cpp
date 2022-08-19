@@ -221,10 +221,12 @@ int main(int argc, char *argv[]) {
         if (!genConfigForDefaultCases(caseId, config))
             return 1;
 
-        printf("case: %s\ndelayCnt:%d, codeLoopCnt:%d\n", TestCaseName[caseId], param.delayCnt,
+        printf("affinity:0x%x, case: %s\ndelay:%d, prologue:%d, epilogue:%d, loop:%d\n", affinity,
+               TestCaseName[caseId], param.delayCnt, param.prologueCnt, param.epilogueCnt,
                param.loopCnt);
     } else {
-        printf("configfile: %s\ndelayCnt:%d, codeLoopCnt:%d\n", argv[configFileIdx], param.delayCnt,
+        printf("affinity:0x%x, configfile: %s\ndelay:%d, prologue:%d, epilogue:%d, loop:%d\n",
+               affinity, argv[configFileIdx], param.delayCnt, param.prologueCnt, param.epilogueCnt,
                param.loopCnt);
     }
 
