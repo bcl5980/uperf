@@ -146,7 +146,7 @@ bool genConfigForDefaultCases(TestCase caseId, PatConfig &config) {
     case InstIALUChain:
         config.di.delayPat.clear();
         config.di.prologuePat.clear();
-        config.di.contentPat.push_back({0x00, 0x00, 0x01, 0x8b}); // add x0, x0, x1
+        config.di.contentPat.push_back({0x00, 0x00, 0x40, 0x92}); // add x0, x0, 1
         config.di.epiloguePat.clear();
         break;
     case InstFALU:
@@ -327,7 +327,7 @@ bool genConfigForDefaultCases(TestCase caseId, PatConfig &config) {
     case SchSqrtIALUChainDep:
         config.di.delayPat.push_back({0x00, 0xc0, 0x61, 0x1e});    // sqrt d0, d0
         config.di.prologuePat.push_back({0x01, 0x00, 0x79, 0x9e}); // fcvtzu x1, d0
-        config.di.contentPat.push_back({0x00, 0x00, 0x01, 0x8b});  // add x0, x0, x1
+        config.di.contentPat.push_back({0x00, 0x00, 0x40, 0x92});  // add x0, x0, 1
         config.di.epiloguePat.clear();
         break;
     case SchSDivFALUDep:
@@ -349,7 +349,7 @@ bool genConfigForDefaultCases(TestCase caseId, PatConfig &config) {
         config.di.epiloguePat.clear();
         break;
     case SchIALUChainNop:
-        config.di.delayPat.push_back({0x00, 0x00, 0x01, 0x8b}); // add x0, x0, x1
+        config.di.delayPat.push_back({0x00, 0x00, 0x40, 0x92}); // add x0, x0, 1
         config.di.prologuePat.clear();
         config.di.contentPat.push_back({0x1f, 0x20, 0x03, 0xd5}); // nop
         config.di.epiloguePat.clear();
