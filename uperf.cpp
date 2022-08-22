@@ -206,6 +206,9 @@ int main(int argc, char *argv[]) {
     unsigned char *instBuf = allocVM(JitMemorySize);
     fillNop(instBuf, JitMemorySize);
 
+    printf("arg0:%llu, arg1:%llu, ptr0:%p, ptr1:%p\n", config.args.iArg0, config.args.iArg1,
+           config.args.ptrArg0, config.args.ptrArg1);
+    printf("test start:\n");
     for (unsigned testCnt = param.begin; testCnt < param.end; testCnt += param.step) {
         printf("%d ", testCnt);
         if (!runPattern(config, instBuf, param, testCnt)) {
