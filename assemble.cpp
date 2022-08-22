@@ -7,7 +7,7 @@ using std::string;
 using std::vector;
 
 const static char AArch64LLVMMC[] = "llvm-mc -filetype=obj -triple=aarch64 -mattr=+sve %s -o %s";
-const static char X86LLVMMC[] = "llvm-mc -filetype=obj -triple=x86 %s -o %s";
+const static char X86LLVMMC[] = "llvm-mc -filetype=obj -triple=x86_64 %s -o %s";
 
 const static unsigned MaxInstNum = 0x100000;
 
@@ -41,17 +41,25 @@ bool assemble(ArchType arch, const string &asmcode, InstBytes &bincode) {
         return false;
     }
 
-    unsigned instsize = *(unsigned *)(elf_header + 40) - 0x94;
-    if (instsize == 0 || instsize > MaxInstNum)
-        return false;
-    bincode.resize(instsize);
-    readsize = fread(&bincode[0], 1, instsize, objfile);
-    if (readsize != instsize) {
+    unsigned buffersize = *(unsigned *)(elf_header + 40) - 0x40 + 0xa0;
+    void *instbuff = malloc(buffersize);
+    readsize = fread(instbuff, 1, buffersize, objfile);
+    if (readsize != buffersize || buffersize >= MaxInstNum) {
         fclose(objfile);
         remove(objfilename);
         return false;
     }
 
+    unsigned instsize = 0;
+    readsize = fread(&instsize, 1, 4, objfile);
+    if (readsize != 4 || instsize >= MaxInstNum) {
+        fclose(objfile);
+        remove(objfilename);
+        return false;
+    }
+
+    bincode.resize(instsize);
+    memcpy(&bincode[0], instbuff, instsize);
     fclose(objfile);
     remove(objfilename);
     return true;

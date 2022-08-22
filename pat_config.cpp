@@ -8,7 +8,10 @@ using std::string;
 using std::vector;
 
 inline bool startswith(const string &toCheck, const string &prefix) {
-    return std::equal(prefix.begin(), prefix.end(), toCheck.begin());
+    if (toCheck.size() >= prefix.size())
+        return std::equal(prefix.begin(), prefix.end(), toCheck.begin());
+    else
+        return false;
 }
 
 const string WHITESPACE = " \n\r\t\f\v";

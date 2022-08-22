@@ -8,8 +8,8 @@ Args: // Only Support 2 int, 2 ptr
 Delay: bin // can be null/bin/asm
     0xF2, 0x0F, 0x51, 0xC0
 Prologue: null
-Content: bin // when use asm , llvm-mc should in the env path
-    0x90 // nop
+Content: asm // when use asm , llvm-mc should in the env path
+    nop
 Epilogue: null
 Period: null
 PeriodFill: null
