@@ -7,12 +7,12 @@ using std::string;
 using std::vector;
 
 const static char AArch64LLVMMC[] = "llvm-mc -filetype=obj -triple=aarch64 -mattr=+sve %s -o %s";
-const static char X86LLVMMC[] = "llvm-mc -filetype=obj -triple=x86_64 %s -o %s";
+const static char X86LLVMMC[] = "llvm-mc -filetype=obj -triple=x86_64 -x86-asm-syntax=intel %s -o %s";
 
 #ifndef NDEBUG
 const static char AArch64LLVMMC_DISPLAY[] =
     "llvm-mc -filetype=asm -show-encoding -triple=aarch64 -mattr=+sve %s";
-const static char X86_64LLVMMC_DISPLAY[] = "llvm-mc -filetype=asm -show-encoding -triple=x86_64 %s";
+const static char X86_64LLVMMC_DISPLAY[] = "llvm-mc -filetype=asm -show-encoding -x86-asm-syntax=intel -triple=x86_64 %s";
 #endif
 
 const static unsigned MaxInstNum = 0x100000;

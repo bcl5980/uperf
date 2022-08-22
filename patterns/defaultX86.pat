@@ -5,11 +5,12 @@ Args: // Only Support 2 int, 2 ptr
     I1, 1
     Ptr0, 0 // 0x
     Ptr1, 0 // 0x
-Delay: bin // can be null/bin/asm
-    0xF2, 0x0F, 0x51, 0xC0
-Prologue: null
+Delay: asm // can be null/bin/asm
+    sqrtsd xmm0, xmm0
+Prologue: asm
+    cvttsd2si rcx, xmm0
 Content: asm // when use asm , llvm-mc should in the env path
-    nop
+    mov rax, QWORD PTR [r8+rcx]
 Epilogue: null
 Period: null
-PeriodFill: null
+PeriodFill: null 
