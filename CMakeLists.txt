@@ -7,5 +7,5 @@ add_subdirectory(archs)
 
 include_directories(archs)
 include_directories(osutils)
-add_executable(uperf uperf.cpp pat_config.cpp)
+add_executable(uperf uperf.cpp pat_config.cpp assemble)
 target_link_libraries(uperf osutils arch)

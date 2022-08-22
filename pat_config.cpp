@@ -1,7 +1,7 @@
 #include <fstream>
 #include <stdio.h>
 
-#include "uperf.h"
+#include "assemble.h"
 
 using std::ifstream;
 using std::string;
@@ -136,58 +136,84 @@ static bool parseArgs(ifstream &is, const string &line, PatConfig &config) {
     return argCount == 4;
 }
 
-static bool parseInsts(ifstream &is, const string &line, vector<InstBytes> &insts) {
+static bool parseInsts(ArchType arch, ifstream &is, const string &line, vector<InstBytes> &insts) {
     insts.clear();
     if (line.find("null") != string::npos) {
         return true;
     }
 
-    string newLine;
-    std::streampos RollBackPos = is.tellg();
-    while (std::getline(is, newLine)) {
-        if (newLine.find(':') != string::npos)
-            break;
+    if (line.find("asm") != string::npos) {
+        string newLine;
+        string asmcode = "";
+        std::streampos RollBackPos = is.tellg();
+        while (std::getline(is, newLine)) {
+            newLine = trim(newLine);
+            if (newLine.find(':') != string::npos)
+                break;
 
-        InstBytes inst;
-        string byteCode = trim(newLine);
-        size_t findS = 0, findE = 0;
-        while ((findE = byteCode.find(',', findS)) != string::npos) {
-            inst.push_back((unsigned char)std::stoi(byteCode.substr(findS, findE), nullptr, 16));
-            findS = findE + 1;
+            asmcode += newLine + '\n';
+            RollBackPos = is.tellg();
         }
-        if (findS < byteCode.size() - 1)
-            inst.push_back((unsigned char)std::stoi(byteCode.substr(findS), nullptr, 16));
-
-        RollBackPos = is.tellg();
+        is.seekg(RollBackPos);
+        if (!asmcode.size())
+            return false;
+        InstBytes inst;
+        assemble(arch, asmcode, inst);
         insts.push_back(inst);
+        return true;
     }
 
-    is.seekg(RollBackPos);
-    return true;
+    if (line.find("bin") != string::npos) {
+        string newLine;
+        std::streampos RollBackPos = is.tellg();
+        while (std::getline(is, newLine)) {
+            newLine = trim(newLine);
+            if (newLine.find(':') != string::npos)
+                break;
+
+            InstBytes inst;
+            string byteCode = trim(newLine);
+            size_t findS = 0, findE = 0;
+            while ((findE = byteCode.find(',', findS)) != string::npos) {
+                inst.push_back(
+                    (unsigned char)std::stoi(byteCode.substr(findS, findE), nullptr, 16));
+                findS = findE + 1;
+            }
+            if (findS < byteCode.size() - 1)
+                inst.push_back((unsigned char)std::stoi(byteCode.substr(findS), nullptr, 16));
+
+            RollBackPos = is.tellg();
+            insts.push_back(inst);
+        }
+        is.seekg(RollBackPos);
+        return true;
+    }
+
+    return false;
 }
 
-static bool parseDelayPattern(ifstream &is, const string &line, PatConfig &config) {
-    return parseInsts(is, line, config.di.delayPat);
+static bool parseDelayPattern(ArchType arch, ifstream &is, const string &line, PatConfig &config) {
+    return parseInsts(arch, is, line, config.di.delayPat);
 }
 
-static bool parsePrologue(ifstream &is, const string &line, PatConfig &config) {
-    return parseInsts(is, line, config.di.prologuePat);
+static bool parsePrologue(ArchType arch, ifstream &is, const string &line, PatConfig &config) {
+    return parseInsts(arch, is, line, config.di.prologuePat);
 }
 
-static bool parseContent(ifstream &is, const string &line, PatConfig &config) {
-    return parseInsts(is, line, config.di.contentPat);
+static bool parseContent(ArchType arch, ifstream &is, const string &line, PatConfig &config) {
+    return parseInsts(arch, is, line, config.di.contentPat);
 }
 
-static bool parseEpilogue(ifstream &is, const string &line, PatConfig &config) {
-    return parseInsts(is, line, config.di.epiloguePat);
+static bool parseEpilogue(ArchType arch, ifstream &is, const string &line, PatConfig &config) {
+    return parseInsts(arch, is, line, config.di.epiloguePat);
 }
 
-static bool parsePeriod(ifstream &is, const string &line, PatConfig &config) {
-    return parseInsts(is, line, config.pi.periodPat);
+static bool parsePeriod(ArchType arch, ifstream &is, const string &line, PatConfig &config) {
+    return parseInsts(arch, is, line, config.pi.periodPat);
 }
 
-static bool parsePeriodFill(ifstream &is, const string &line, PatConfig &config) {
-    return parseInsts(is, line, config.pi.fillPat);
+static bool parsePeriodFill(ArchType arch, ifstream &is, const string &line, PatConfig &config) {
+    return parseInsts(arch, is, line, config.pi.fillPat);
 }
 
 bool parseConfig(PatConfig &config, const string &path) {
@@ -216,32 +242,32 @@ bool parseConfig(PatConfig &config, const string &path) {
                 return false;
             }
         } else if (startswith(line, PrefixDelay)) {
-            if (!parseDelayPattern(is, line, config)) {
+            if (!parseDelayPattern(config.arch, is, line, config)) {
                 printf("parse delay pattern failed\n");
                 return false;
             }
         } else if (startswith(line, PrefixPrologue)) {
-            if (!parsePrologue(is, line, config)) {
+            if (!parsePrologue(config.arch, is, line, config)) {
                 printf("parse prologue failed\n");
                 return false;
             }
         } else if (startswith(line, PrefixContent)) {
-            if (!parseContent(is, line, config)) {
+            if (!parseContent(config.arch, is, line, config)) {
                 printf("parse content failed\n");
                 return false;
             }
         } else if (startswith(line, PrefixEpilogue)) {
-            if (!parseEpilogue(is, line, config)) {
+            if (!parseEpilogue(config.arch, is, line, config)) {
                 printf("parse epilogue failed\n");
                 return false;
             }
         } else if (startswith(line, PrefixPeriod)) {
-            if (!parsePeriod(is, line, config)) {
+            if (!parsePeriod(config.arch, is, line, config)) {
                 printf("parse period pattern failed\n");
                 return false;
             }
         } else if (startswith(line, PrefixPeriodFill)) {
-            if (!parsePeriodFill(is, line, config)) {
+            if (!parsePeriodFill(config.arch, is, line, config)) {
                 printf("parse period fill pattern failed\n");
                 return false;
             }

@@ -10,4 +10,4 @@ extern void genPeriodPattern(PatConfig &config, unsigned char *inst, unsigned pe
                              unsigned instNum, unsigned instThroughPut, unsigned nopThroughPut,
                              size_t &i);
 
-#endif __ARCHBASE_H__
+#endif // __ARCHBASE_H__
