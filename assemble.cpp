@@ -66,6 +66,7 @@ bool assemble(ArchType arch, const string &asmcode, InstBytes &bincode) {
     unsigned instsize = 0;
     readsize = fread(&instsize, 1, 4, objfile);
     if (readsize != 4 || instsize >= MaxInstNum) {
+        free(instbuff);
         fclose(objfile);
         remove(objfilename);
         return false;
@@ -73,6 +74,7 @@ bool assemble(ArchType arch, const string &asmcode, InstBytes &bincode) {
 
     bincode.resize(instsize);
     memcpy(&bincode[0], instbuff, instsize);
+    free(instbuff);
     fclose(objfile);
     remove(objfilename);
 
