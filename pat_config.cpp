@@ -161,7 +161,8 @@ static bool parseInsts(ArchType arch, ifstream &is, const string &line, vector<I
         if (!asmcode.size())
             return false;
         InstBytes inst;
-        assemble(arch, asmcode, inst);
+        if (!assemble(arch, asmcode, inst))
+            return false;
         insts.push_back(inst);
         return true;
     }

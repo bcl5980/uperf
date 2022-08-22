@@ -9,6 +9,12 @@ using std::vector;
 const static char AArch64LLVMMC[] = "llvm-mc -filetype=obj -triple=aarch64 -mattr=+sve %s -o %s";
 const static char X86LLVMMC[] = "llvm-mc -filetype=obj -triple=x86_64 %s -o %s";
 
+#ifndef NDEBUG
+const static char AArch64LLVMMC_DISPLAY[] =
+    "llvm-mc -filetype=asm -show-encoding -triple=aarch64 -mattr=+sve %s";
+const static char X86_64LLVMMC_DISPLAY[] = "llvm-mc -filetype=asm -show-encoding -triple=x86_64 %s";
+#endif
+
 const static unsigned MaxInstNum = 0x100000;
 
 bool assemble(ArchType arch, const string &asmcode, InstBytes &bincode) {
@@ -25,6 +31,13 @@ bool assemble(ArchType arch, const string &asmcode, InstBytes &bincode) {
     char cmd[256];
     sprintf(cmd, (arch == ArchType::X86_64) ? X86LLVMMC : AArch64LLVMMC, asmfilename, objfilename);
     system(cmd);
+
+#ifndef NDEBUG
+    sprintf(cmd, (arch == ArchType::X86_64) ? X86_64LLVMMC_DISPLAY : AArch64LLVMMC_DISPLAY,
+            asmfilename);
+    system(cmd);
+#endif
+
     remove(asmfilename);
 
     FILE *objfile = fopen(objfilename, "rb");
@@ -62,5 +75,6 @@ bool assemble(ArchType arch, const string &asmcode, InstBytes &bincode) {
     memcpy(&bincode[0], instbuff, instsize);
     fclose(objfile);
     remove(objfilename);
+
     return true;
 }
