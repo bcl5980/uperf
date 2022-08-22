@@ -3,8 +3,8 @@ WorkMode: Delay // Can be Delay/Period
 Args: // Only Support 2 int, 2 ptr
     I0, 1
     I1, 1
-    Ptr0, 0 // 0x
-    Ptr1, 0 // 0x
+    Ptr0, 0x100 // 0x
+    Ptr1, 0x100 // 0x
 Delay: asm // can be null/bin/asm
     sqrtsd xmm0, xmm0
 Prologue: asm
