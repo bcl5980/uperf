@@ -1,5 +1,6 @@
 import argparse
 import subprocess
+from tracemalloc import start
 import numpy as np
 import pwlf
 from matplotlib import pyplot as plt
@@ -73,7 +74,16 @@ print("IPC if no delay:" + str(1/lr[0][0]))
 
 my_pwlf = pwlf.PiecewiseLinFit(x, y)
 res = my_pwlf.fit(args.segments)
-print(res)
+for i in range(0, len(res)-1):
+    starti = int(res[i])
+    endi = int(res[i+1])
+    if endi > starti:
+        subx = x[starti:endi]
+        suby = y[starti:endi]
+        subx_matrix = np.vstack([subx, np.ones(len(subx))]).T
+        k = np.linalg.lstsq(subx_matrix, suby, rcond=None)
+        print("{}->{}, cpi:{}, ipc:{}".format(starti, endi, str(k[0][0]), str(1/k[0][0])))
+
 y_fit = my_pwlf.predict(x)
 
 plt.title(cmd)
