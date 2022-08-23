@@ -76,11 +76,15 @@ if minli == 0:
     for i in range(1, 6):
         my_pwlf.fit(i)
         y_fit = my_pwlf.predict(x)
-        loss = np.sqrt(np.sum(np.square(y_fit - y)))
-        print("i:{} loss:{}".format(i, loss))
+        y_delta = y_fit - y
+        y_deltasum = np.sum(y_delta)
+        y_delta = y_delta - y_deltasum
+        loss = np.sqrt(np.sum(np.square(y_delta) / len(y)))
         if minloss > loss:
             minloss = loss
             minli = i
+        if minloss < 1:
+            break
 
 res = my_pwlf.fit(minli)
 for i in range(0, len(res)-1):
