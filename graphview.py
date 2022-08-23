@@ -1,6 +1,7 @@
 import argparse
 import subprocess
 import numpy as np
+import pwlf
 from matplotlib import pyplot as plt
 
 parser = argparse.ArgumentParser(description='uperf parameters')
@@ -62,6 +63,15 @@ for line in list_of_strings:
         point = line.strip().split(' ')
         x.append(int(point[0]))
         y.append(float(point[1]))
+
+x_matrix = np.vstack([x, np.ones(len(x))]).T
+lr = np.linalg.lstsq(x_matrix, y, rcond=None)
+print("IPC if no delay:" + str(1/lr[0][0]))
+
+my_pwlf = pwlf.PiecewiseLinFit(x, y)
+res = my_pwlf.fit(4)
+print(res[0])
+
 plt.title(cmd)
 plt.plot(x, y)
 plt.show()
