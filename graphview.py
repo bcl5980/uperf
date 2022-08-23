@@ -21,7 +21,7 @@ parser.add_argument('-thrput_inst', type=str)
 parser.add_argument('-thrput_fill', type=str)
 parser.add_argument('-affinity', type=str)
 parser.add_argument('-f', type=str)
-parser.add_argument('-segments', type=int, default=3)
+parser.add_argument('-segments', type=int, default=0)
 
 args = parser.parse_args()
 cmd = [args.exec]
@@ -68,12 +68,21 @@ for line in list_of_strings:
     else:
         print(line)
 
-x_matrix = np.vstack([x, np.ones(len(x))]).T
-lr = np.linalg.lstsq(x_matrix, y, rcond=None)
-print("IPC if no delay:" + str(1/lr[0][0]))
-
 my_pwlf = pwlf.PiecewiseLinFit(x, y)
-res = my_pwlf.fit(args.segments)
+minli = args.segments
+if minli == 0:
+    minloss = 1000000000000.0
+    minli = 6
+    for i in range(1, 6):
+        my_pwlf.fit(i)
+        y_fit = my_pwlf.predict(x)
+        loss = np.sqrt(np.sum(np.square(y_fit - y)))
+        print("i:{} loss:{}".format(i, loss))
+        if minloss > loss:
+            minloss = loss
+            minli = i
+
+res = my_pwlf.fit(minli)
 for i in range(0, len(res)-1):
     starti = int(res[i])
     endi = int(res[i+1])
@@ -82,7 +91,8 @@ for i in range(0, len(res)-1):
         suby = y[starti:endi]
         subx_matrix = np.vstack([subx, np.ones(len(subx))]).T
         k = np.linalg.lstsq(subx_matrix, suby, rcond=None)
-        print("{}->{}, cpi:{}, ipc:{}".format(starti, endi, str(k[0][0]), str(1/k[0][0])))
+        print("{}->{}, cpi:{}, ipc:{}".format(starti,
+              endi, str(k[0][0]), str(1/k[0][0])))
 
 y_fit = my_pwlf.predict(x)
 
