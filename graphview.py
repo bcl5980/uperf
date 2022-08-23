@@ -57,8 +57,8 @@ p.wait()
 x = []
 y = []
 starttest = False
-list_of_strings = [x.decode('utf-8').rstrip('\n')
-                   for x in iter(p.stdout.readlines())]
+list_of_strings = [line.decode('utf-8').rstrip('\n')
+                   for line in iter(p.stdout.readlines())]
 
 for line in list_of_strings:
     if line.find('test start:') == 0:
