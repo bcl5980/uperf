@@ -20,6 +20,7 @@ parser.add_argument('-thrput_inst', type=str)
 parser.add_argument('-thrput_fill', type=str)
 parser.add_argument('-affinity', type=str)
 parser.add_argument('-f', type=str)
+parser.add_argument('-segments', type=int, default=3)
 
 args = parser.parse_args()
 cmd = [args.exec]
@@ -71,7 +72,7 @@ lr = np.linalg.lstsq(x_matrix, y, rcond=None)
 print("IPC if no delay:" + str(1/lr[0][0]))
 
 my_pwlf = pwlf.PiecewiseLinFit(x, y)
-res = my_pwlf.fit(3)
+res = my_pwlf.fit(args.segments)
 print(res)
 y_fit = my_pwlf.predict(x)
 
