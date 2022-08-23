@@ -98,7 +98,7 @@ for i in range(0, len(res)-1):
         subx_matrix = np.vstack([subx, np.ones(len(subx))]).T
         k = np.linalg.lstsq(subx_matrix, suby, rcond=None)
         print("{}->{}, cpi:{}, ipc:{}".format(starti,
-              endi, str(k[0][0]), str(1/k[0][0])))
+              endi, str(k[0][0]), str(1/(k[0][0]+1e-8))))
 
 y_fit = my_pwlf.predict(x)
 
