@@ -63,15 +63,19 @@ for line in list_of_strings:
         point = line.strip().split(' ')
         x.append(int(point[0]))
         y.append(float(point[1]))
+    else:
+        print(line)
 
 x_matrix = np.vstack([x, np.ones(len(x))]).T
 lr = np.linalg.lstsq(x_matrix, y, rcond=None)
 print("IPC if no delay:" + str(1/lr[0][0]))
 
 my_pwlf = pwlf.PiecewiseLinFit(x, y)
-res = my_pwlf.fit(4)
-print(res[0])
+res = my_pwlf.fit(3)
+print(res)
+y_fit = my_pwlf.predict(x)
 
 plt.title(cmd)
 plt.plot(x, y)
+plt.plot(x, y_fit)
 plt.show()
