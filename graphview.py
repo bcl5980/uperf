@@ -53,11 +53,13 @@ if args.f is not None:
     cmd.extend(['-f', args.f])
 
 p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+p.wait()
 x = []
 y = []
 starttest = False
 list_of_strings = [x.decode('utf-8').rstrip('\n')
                    for x in iter(p.stdout.readlines())]
+
 for line in list_of_strings:
     if line.find('test start:') == 0:
         starttest = True
