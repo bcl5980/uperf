@@ -252,7 +252,7 @@ bool genConfigForDefaultCases(TestCase caseId, PatConfig &config) {
     case SchSqrtIALUChainDep:
         config.di.delayPat.push_back({0x00, 0xc0, 0x61, 0x1e});    // sqrt d0, d0
         config.di.prologuePat.push_back({0x01, 0x00, 0x79, 0x9e}); // fcvtzu x1, d0
-        config.di.contentPat.push_back({0x00, 0x00, 0x40, 0x92});  // add x0, x0, 1
+        config.di.contentPat.push_back({0x20, 0x04, 0x00, 0x91});  // add x1, x1, 1
         config.di.epiloguePat.clear();
         break;
     case SchSDivFALUDep:
