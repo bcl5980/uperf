@@ -90,15 +90,19 @@ if minli == 0:
 
 res = my_pwlf.fit(minli)
 for i in range(0, len(res)-1):
-    starti = int(res[i])
-    endi = int(res[i+1])
-    if endi > starti:
-        subx = x[starti:endi]
-        suby = y[starti:endi]
+    start = res[i]
+    end = res[i+1]
+    if end > start:
+        subx = []
+        suby = []
+        for i in range(0, len(x)):
+            if x[i] >= start and x[i] < end:
+                subx.append(x[i])
+                suby.append(y[i])
         subx_matrix = np.vstack([subx, np.ones(len(subx))]).T
         k = np.linalg.lstsq(subx_matrix, suby, rcond=None)
-        print("{}->{}, cpi:{}, ipc:{}".format(starti,
-              endi, str(k[0][0]), str(1/(k[0][0]+1e-8))))
+        print("{}->{}, cpi:{}, ipc:{}".format(start,
+              end, str(k[0][0]), str(1/(k[0][0]+1e-8))))
 
 y_fit = my_pwlf.predict(x)
 
